@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "Create a new ASP.NET Core MVC app called Acme.Web and wire it to Kontent.ai environment 8a80c10d-3530-016a-4222-675cc7ba3019. Generate strongly typed models for it, but don't invent any pages from the content model yet - I just want the plumbing in place.",
-      "expected_output": "A solution with an MVC project from the standard template on an installed stable SDK; stable, mutually compatible Kontent.Ai.Delivery, Kontent.Ai.Delivery.SourceGeneration and Kontent.Ai.AspNetCore packages; a local tool manifest pinning Kontent.Ai.ModelGenerator; generated models in a dedicated directory; DeliveryOptions bound in Program.cs through the builder callback; tag helpers registered; a green build; and no controllers, views or routes derived from content types.",
+      "expected_output": "A solution with an MVC project from the standard template on an installed stable SDK; Kontent.Ai.Delivery, Kontent.Ai.Delivery.SourceGeneration and Kontent.Ai.AspNetCore from the current package line (release candidates installed with --prerelease); a local tool manifest at .config/dotnet-tools.json pinning Kontent.Ai.ModelGenerator; generated models in a dedicated directory; DeliveryOptions bound in Program.cs with AddDeliveryClient(builder.Configuration); tag helpers registered; a .gitignore; a green build; and no controllers, views or routes derived from content types.",
       "files": [],
       "assertions": [
         "A .config/dotnet-tools.json manifest pins Kontent.Ai.ModelGenerator",
