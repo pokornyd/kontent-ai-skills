@@ -8,6 +8,7 @@ A repository-local manifest makes generation reproducible for the next person:
 
 ```bash
 dotnet new tool-manifest      # skip when .config/dotnet-tools.json already exists
+mkdir -p .config && mv dotnet-tools.json .config/   # the .NET 10 SDK writes it to the current directory
 dotnet tool install Kontent.Ai.ModelGenerator --prerelease
 ```
 
@@ -67,5 +68,5 @@ Generate into a temporary directory first and diff it against the generated dire
 
 - every expected model has `[ContentTypeCodename("...")]` and lives in the intended namespace;
 - the project builds against the resolved Delivery packages;
-- a typed query such as `client.GetItems<ChosenType>()` compiles without any manual type-provider registration;
+- `grep -rl GeneratedTypeProvider obj/` finds the source-generated provider, which is what makes typed queries work without a manual registration; no probe file is needed;
 - the documented command reproduces the same files.

@@ -10,7 +10,7 @@
         "A .config/dotnet-tools.json manifest pins Kontent.Ai.ModelGenerator",
         "Generated model files carry the auto-generated header and a [ContentTypeCodename] attribute",
         "The web project references Kontent.Ai.Delivery, Kontent.Ai.Delivery.SourceGeneration and Kontent.Ai.AspNetCore from one package line (the current release-candidate line unless the user or framework forces the previous stable one)",
-        "Program.cs registers the client with the AddDeliveryClient form that matches the resolved Delivery major (builder callback on 20.x, IConfiguration overload on 19.x) and binds the DeliveryOptions section",
+        "Program.cs registers the client with AddDeliveryClient(builder.Configuration) or a section overload, binding the DeliveryOptions section",
         "_ViewImports.cshtml contains @addTagHelper *, Kontent.Ai.AspNetCore",
         "No controller, view or route was created for a content type",
         "dotnet build completes with zero errors",
@@ -29,7 +29,7 @@
         "Directory.Packages.props contains PackageVersion entries for every Kontent.ai package added",
         "No PackageReference in Acme.Web.csproj carries an inline Version attribute",
         "Generated models exist in a dedicated directory inside the web project and compile",
-        "Program.cs registers the client with the AddDeliveryClient form that matches the resolved Delivery major and binds the DeliveryOptions section",
+        "Program.cs registers the client with AddDeliveryClient(builder.Configuration) or a section overload, binding the DeliveryOptions section",
         "dotnet build completes with zero errors",
         "Files unrelated to the integration (HomeController.cs, existing views, wwwroot) are unchanged"
       ]
@@ -98,7 +98,7 @@
       "assertions": [
         "The response states that this MVC skill does not fit a React plus BFF architecture",
         "No Razor views, _ViewImports tag-helper registration or rich-text/img-asset markup were created for content rendering",
-        "If any Delivery client registration was produced, it uses the AddDeliveryClient form that matches the resolved Delivery major"
+        "If any Delivery client registration was produced, it uses AddDeliveryClient(builder.Configuration) or a section overload"
       ]
     },
     {

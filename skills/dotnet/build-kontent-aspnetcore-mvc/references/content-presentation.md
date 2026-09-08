@@ -41,17 +41,16 @@ public sealed class ArticleContentService(IDeliveryClient client, ILogger<Articl
             return null;
         }
 
-        logger.LogError("Delivery request for {Codename} failed with {StatusCode}: {Message}",
+        logger.LogError(result.Error?.Exception, "Delivery request for {Codename} failed with {StatusCode}: {Message}",
             codename, result.StatusCode, result.Error?.Message);
-        throw new DeliveryRequestException(
-            result.Error?.Message ?? "Delivery request failed.", result.StatusCode, result.Error, result.RequestUrl);
+        throw new InvalidOperationException($"Delivery request for '{codename}' failed with {(int)result.StatusCode}.", result.Error?.Exception);
     }
 }
 ```
 
 The shape that matters: the request token is passed through, a missing item becomes `null`, and every other failure is logged with the SDK's own diagnostics and surfaced through the app's error policy instead of being swallowed as empty content. Throwing is the placeholder; an app with a result type or an error view uses that.
 
-Listings use `client.GetItems<Article>()` with `WithElements(Article.TitleCodename, ...)`, `OrderByElement`, `Skip`/`Limit` and `WithTotalCount()` for paging. Reserve `GetItemsFeed` for bulk traversal such as index building. `Depth` fetches linked items; a large value stands in for knowing which links the view renders, so keep it at what the view needs.
+Listings use `client.GetItems<Article>()` with `WithElements(Article.TitleCodename, ...)`, `OrderBy($"elements.{Article.PostDateCodename}", OrderingMode.Descending)`, `Skip`/`Limit` and `WithTotalCount()` for paging (`result.Value.Pagination.TotalCount`, `HasNextPage`). Reserve `GetItemsFeed` for bulk traversal such as index building. `Depth` fetches linked items; a large value stands in for knowing which links the view renders, so keep it at what the view needs.
 
 ## Controller
 

@@ -14,12 +14,12 @@ Prefer current primary sources and the actual target project over remembered sni
 
 ## Framework compatibility
 
-| Package line | Target framework | Registration form |
-| --- | --- | --- |
-| Kontent.Ai.Delivery 19.x, Kontent.Ai.AspNetCore 0.16.x, Kontent.Ai.ModelGenerator 10.x | `net8.0` (installs into newer frameworks) | `AddDeliveryClient(builder.Configuration)` |
-| Kontent.Ai.Delivery 20.x, Kontent.Ai.AspNetCore 1.x, Kontent.Ai.ModelGenerator 11.x | `net10.0` only | `AddDeliveryClient(delivery => delivery.Options.BindConfiguration("DeliveryOptions"))` |
+| Package line | Target framework |
+| --- | --- |
+| Kontent.Ai.Delivery 19.x, Kontent.Ai.AspNetCore 0.16.x, Kontent.Ai.ModelGenerator 10.x | `net8.0` (installs into newer frameworks) |
+| Kontent.Ai.Delivery 20.x, Kontent.Ai.AspNetCore 1.x, Kontent.Ai.ModelGenerator 11.x | `net10.0` only |
 
-The current line is the default even while it is a release candidate; `dotnet package search <id> --exact-match --prerelease` shows the newest build of it. `Kontent.Ai.Delivery.SourceGeneration` is `netstandard2.0` and follows the Delivery version, not the framework. `Kontent.Ai.AspNetCore` depends on `Kontent.Ai.Delivery`, so its line fixes the Delivery line, and the model generator's major follows the Delivery major it emits models for. Pick all three from one line.
+The current line is the default even while it is a release candidate. A new app needs no version lookup: `--prerelease` on the add and install commands resolves the newest build. Look versions up (`dotnet package search <id> --exact-match --prerelease`) only when an existing app forces the older line. `Kontent.Ai.Delivery.SourceGeneration` is `netstandard2.0` and follows the Delivery version, not the framework. `Kontent.Ai.AspNetCore` depends on `Kontent.Ai.Delivery`, so its line fixes the Delivery line, and the model generator's major follows the Delivery major it emits models for. Pick all three from one line.
 
 When the current line is incompatible with the target framework:
 
@@ -36,7 +36,7 @@ dotnet new mvc --name <ProjectName> --framework <TargetFramework>
 dotnet sln add <ProjectName>/<ProjectName>.csproj
 ```
 
-Use an installed stable SDK and the current supported stable framework unless the user requested one. Respect a requested name, solution layout and authentication mode. Styling systems, JavaScript frameworks, persistence, authentication, caching, webhooks, Smart Link and preview switching are separate requests; the template plus the Kontent.ai packages is the deliverable.
+When the folder has no git repository, add `dotnet new gitignore` at the root so `bin/` and `obj/` never reach a first commit. Use an installed stable SDK and the current supported stable framework unless the user requested one. Respect a requested name, solution layout and authentication mode. Styling systems, JavaScript frameworks, persistence, authentication, caching, webhooks, Smart Link and preview switching are separate requests; the template plus the Kontent.ai packages is the deliverable.
 
 ## Existing application
 
@@ -78,14 +78,12 @@ Bind the SDK's standard section:
 ```
 
 ```csharp
-// Delivery 20.x
-builder.Services.AddDeliveryClient(delivery => delivery.Options.BindConfiguration("DeliveryOptions"));
+using Kontent.Ai.Delivery;
 
-// Delivery 19.x
 builder.Services.AddDeliveryClient(builder.Configuration);
 ```
 
-On 20.x, `Options` is an `OptionsBuilder<DeliveryOptions>`, so `Configure`, `Bind`, `PostConfigure` and `Validate` are available on it, binding this way keeps `IOptionsMonitor` reloads working, and pipeline customisation (`delivery.ConfigureResilience(...)`, `delivery.HttpClient`) chains on the same builder. The 19.x overload binds the `DeliveryOptions` section by name.
+The overload binds the `DeliveryOptions` section by name and keeps `IOptionsMonitor` reloads working; `AddDeliveryClient(builder.Configuration, "OtherSection")` and `AddDeliveryClient(section)` exist for a differently named section, and every configuration overload takes optional `configureHttpClient` and `configureResilience` callbacks when the pipeline needs customising. The `using Kontent.Ai.Delivery;` line is required; implicit usings do not include it.
 
 The environment ID may live in tracked configuration when the repository permits it. `PreviewApiKey` and `SecureAccessApiKey` go to user secrets in development and to environment variables such as `DeliveryOptions__SecureAccessApiKey` in deployment:
 

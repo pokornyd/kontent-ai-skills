@@ -27,6 +27,6 @@ Run `dotnet test --no-build` only when the preceding build included the test pro
 
 ## Runtime smoke test
 
-When the task includes a functional slice and environment access is available, start the app on an ephemeral port, request the implemented route, and check both the response and the logs; stop the process afterwards. A default MVC homepage proves startup, not Delivery connectivity, so say which one was tested.
+For a plumbing-only task the clean build is the check; starting the app proves nothing a compile did not, so skip it. When the task includes a functional slice and environment access is available, start the app with `dotnet run --no-launch-profile --urls http://127.0.0.1:<port>` (without `--no-launch-profile`, `launchSettings.json` overrides the URL), request the implemented route, check both the response and the logs, and stop the process afterwards. A default MVC homepage proves startup, not Delivery connectivity, so say which one was tested.
 
 If Secure Access, network policy or missing content blocks the runtime check, report the blocker and leave the build green. Hardcoded sample content standing in for a failed Delivery request hides the failure from the user; never substitute it.
