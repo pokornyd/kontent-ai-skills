@@ -16,7 +16,7 @@ Run `dotnet test --no-build` only when the preceding build included the test pro
 ## Integration invariants
 
 - `DeliveryOptions` is bound in `AddDeliveryClient` and required values come from an allowed configuration source;
-- no Preview or Secure Access key is tracked;
+- no Preview or Secure Access key is tracked, and its value appears in no command text, generated file or report (variable references only);
 - generated models are isolated in their directory and reproducible from the documented command;
 - `Kontent.Ai.Delivery.SourceGeneration` is referenced by the compilation containing the attributed models;
 - typed queries compile without a hand-written type registry;

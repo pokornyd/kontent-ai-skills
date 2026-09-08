@@ -89,7 +89,7 @@ The environment ID may live in tracked configuration when the repository permits
 
 ```bash
 dotnet user-secrets init --project <web-project>
-dotnet user-secrets set "DeliveryOptions:SecureAccessApiKey" "<key>" --project <web-project>
+dotnet user-secrets set "DeliveryOptions:SecureAccessApiKey" "$KONTENT_SECURE_ACCESS_KEY" --project <web-project>
 ```
 
-Never place example keys in `launchSettings.json`, tracked `appsettings*.json`, generated code or shell scripts.
+The variable reference is deliberate: the shell expands it inside the process, so the value stays out of the command text and the transcript. When the user prefers to run that command themselves, tell them the exact line and continue once they confirm. Set `UseSecureAccess` (or `UsePreviewApi`) to `true` in the tracked `DeliveryOptions` section so the app reads the key it was given. Never place example keys in `launchSettings.json`, tracked `appsettings*.json`, generated code or shell scripts.

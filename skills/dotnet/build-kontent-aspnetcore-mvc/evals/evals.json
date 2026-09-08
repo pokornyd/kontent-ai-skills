@@ -21,7 +21,9 @@
       "id": 2,
       "prompt": "Add Kontent.ai Delivery to the existing MVC solution in existing-net10-cpm (Acme.slnx) using environment 975bf280-fd91-488c-994c-2f04416e5ee3. Keep our target framework and central package management exactly as they are.",
       "expected_output": "Kontent.ai packages added as PackageVersion entries in Directory.Packages.props with version-less PackageReference items in Acme.Web.csproj; TargetFramework unchanged; models generated into the web project; DeliveryOptions bound in Program.cs; a green build; and no edits to files unrelated to the integration.",
-      "files": ["evals/files/existing-net10-cpm"],
+      "files": [
+        "evals/files/existing-net10-cpm"
+      ],
       "assertions": [
         "Acme.Web.csproj still targets net10.0",
         "Directory.Packages.props contains PackageVersion entries for every Kontent.ai package added",
@@ -62,14 +64,14 @@
     },
     {
       "id": 5,
-      "prompt": "Generate the MVC integration for our secured Kontent.ai environment <environment-id>. The Secure Access key is in the KONTENT_SECURE_ACCESS_KEY environment variable - use it, but make sure it never ends up in the repo or in your summary.",
-      "expected_output": "Requires a real Secure Access environment; replace <environment-id> and export the key before running. The agent uses the key through a temporary, permission-restricted appSettings.json for the model generator (or, as a last resort, the command line), deletes the temporary configuration afterwards, stores the app's key in user secrets or documents the environment variable, and neither prints nor commits the key.",
+      "prompt": "Generate the MVC integration for our secured Kontent.ai environment <environment-id>. I've exported the Secure Access key as KONTENT_SECURE_ACCESS_KEY in this shell - use it, but make sure it never ends up in the repo, in a command, or in your summary.",
+      "expected_output": "Requires a real Secure Access environment; replace <environment-id> and export KONTENT_SECURE_ACCESS_KEY before running. The agent checks the variable is present without printing it, passes it to the model generator and to user-secrets by variable reference only, enables UseSecureAccess in tracked configuration, and neither prints nor commits the key.",
       "files": [],
       "assertions": [
         "The Secure Access key value does not appear in any file under the output directory",
-        "The Secure Access key value does not appear in the agent's final report",
-        "The model generator was run with a temporary configuration or working directory that was removed afterwards",
-        "The application reads SecureAccessApiKey from user secrets or an environment variable, and UseSecureAccess is enabled in configuration",
+        "The Secure Access key value does not appear in the agent's final report or in any command it ran; commands reference $KONTENT_SECURE_ACCESS_KEY by name",
+        "The model generator was invoked with --DeliveryOptions:UseSecureAccess true and the key passed by variable reference",
+        "The application stores SecureAccessApiKey in user secrets or reads it from an environment variable, and UseSecureAccess is true in the tracked DeliveryOptions section",
         "dotnet build completes with zero errors"
       ]
     },
@@ -77,7 +79,9 @@
       "id": 6,
       "prompt": "Add the latest Kontent.ai MVC integration to the Legacy.Web app in existing-net8. It's on net8.0 and we can't move it right now.",
       "expected_output": "The agent keeps net8.0 and installs the newest stable net8.0-compatible releases (Delivery 19.x, AspNetCore 0.16.x) with a matching model generator, gets a green build, and explains the framework constraint and the upgrade path in the report.",
-      "files": ["evals/files/existing-net8"],
+      "files": [
+        "evals/files/existing-net8"
+      ],
       "assertions": [
         "Legacy.Web.csproj still targets net8.0",
         "No Kontent.ai package reference uses a prerelease version",
@@ -101,7 +105,9 @@
       "id": 8,
       "prompt": "The content model changed - regenerate the Kontent.ai models in the Acme.Web app in regenerate-net10 and make sure nothing stale is left behind.",
       "expected_output": "Models regenerated with the pinned local tool into a temporary directory and diffed against Content/Generated; the stale LegacyBanner.cs record is removed; the hand-written partial Content/Article.cs is preserved; the project rebuilds; and the summary lists removed or renamed types.",
-      "files": ["evals/files/regenerate-net10"],
+      "files": [
+        "evals/files/regenerate-net10"
+      ],
       "assertions": [
         "Content/Generated/LegacyBanner.cs no longer exists after regeneration",
         "Content/Article.cs (the hand-written partial) is unchanged",

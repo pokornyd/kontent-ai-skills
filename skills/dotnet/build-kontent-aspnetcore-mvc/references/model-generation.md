@@ -31,27 +31,22 @@ Delivery mode is the default; `--management` emits Management SDK models, which 
 
 ## Protected environments
 
-The generator reads its command line and an optional `appSettings.json` in its working directory, nothing else. For Secure Access:
+The generator reads its command line and an optional `appSettings.json` in its working directory, nothing else: not user secrets, not environment variables. The key therefore has to be on the command line, referenced by variable so the value never appears in the command text, the transcript or shell history:
 
-1. create a temporary working directory outside the repository;
-2. write a minimal `appSettings.json` there with restricted permissions (`chmod 600`);
-3. run the local tool from that directory with an absolute `--outputdir`;
-4. delete the directory when the command finishes.
-
-```json
-{
-  "DeliveryOptions": {
-    "EnvironmentId": "<environment-id>",
-    "UseSecureAccess": true,
-    "SecureAccessApiKey": "<secure-access-key>"
-  },
-  "Namespace": "<RootNamespace>.Content",
-  "OutputDir": "<absolute-generated-directory>",
-  "Nullability": "strict"
-}
+```bash
+test -n "$KONTENT_SECURE_ACCESS_KEY" || { echo "export KONTENT_SECURE_ACCESS_KEY first"; exit 1; }
+dotnet tool run KontentModelGenerator \
+  --environmentId "<environment-id>" \
+  --namespace "<RootNamespace>.Content" \
+  --outputdir "<generated-directory>" \
+  --nullability strict \
+  --DeliveryOptions:UseSecureAccess true \
+  --DeliveryOptions:SecureAccessApiKey "$KONTENT_SECURE_ACCESS_KEY"
 ```
 
-`--DeliveryOptions:SecureAccessApiKey <key>` on the command line also works but exposes the key to process listings and shell history; use it only when a temporary file is impossible. Never print the key or include it in the final report. Use Preview API access only when the user explicitly needs an unpublished content model.
+Preview content works the same way with `--DeliveryOptions:UsePreviewApi true --DeliveryOptions:PreviewApiKey "$KONTENT_PREVIEW_API_KEY"`, and only when the user explicitly needs an unpublished content model.
+
+User secrets are for the running app, not for the generator: `dotnet user-secrets list` prints values into the transcript, so never use it to recover a key. When only user secrets hold it, ask the user to export `KONTENT_SECURE_ACCESS_KEY` and continue from there. Do not write the key into a temporary `appSettings.json` outside the repository either: `dotnet tool run` finds the manifest by walking up from the working directory, so the local tool is not available there.
 
 ## Generated-code boundary
 
