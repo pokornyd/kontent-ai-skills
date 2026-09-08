@@ -19,14 +19,14 @@ Prefer current primary sources and the actual target project over remembered sni
 | Kontent.Ai.Delivery 19.x, Kontent.Ai.AspNetCore 0.16.x, Kontent.Ai.ModelGenerator 10.x | `net8.0` (installs into newer frameworks) | `AddDeliveryClient(builder.Configuration)` |
 | Kontent.Ai.Delivery 20.x, Kontent.Ai.AspNetCore 1.x, Kontent.Ai.ModelGenerator 11.x | `net10.0` only | `AddDeliveryClient(delivery => delivery.Options.BindConfiguration("DeliveryOptions"))` |
 
-Which line is the latest stable changes over time; `dotnet package search <id> --exact-match` answers it. `Kontent.Ai.Delivery.SourceGeneration` is `netstandard2.0` and follows the Delivery version, not the framework. `Kontent.Ai.AspNetCore` depends on `Kontent.Ai.Delivery`, so its line fixes the Delivery line, and the model generator's major follows the Delivery major it emits models for. Pick all three from one line.
+The current line is the default even while it is a release candidate; `dotnet package search <id> --exact-match --prerelease` shows the newest build of it. `Kontent.Ai.Delivery.SourceGeneration` is `netstandard2.0` and follows the Delivery version, not the framework. `Kontent.Ai.AspNetCore` depends on `Kontent.Ai.Delivery`, so its line fixes the Delivery line, and the model generator's major follows the Delivery major it emits models for. Pick all three from one line.
 
-When the latest stable is incompatible with the target framework:
+When the current line is incompatible with the target framework:
 
 1. read NuGet's `NU1202` message for the supported frameworks;
-2. select the newest stable release that supports the user's framework;
+2. select the newest release of the previous line that supports the user's framework;
 3. offer a framework upgrade as a separate, explicit choice when it would materially improve the result;
-4. never resolve it with a prerelease or by silently retargeting the app.
+4. never resolve it by silently retargeting the app.
 
 ## New application
 
@@ -53,10 +53,12 @@ Preserve central package management: add `<PackageVersion>` entries there and no
 ## Package policy
 
 ```bash
-dotnet add <web-project> package Kontent.Ai.Delivery
-dotnet add <models-project> package Kontent.Ai.Delivery.SourceGeneration
-dotnet add <web-project> package Kontent.Ai.AspNetCore
+dotnet add <web-project> package Kontent.Ai.Delivery --prerelease
+dotnet add <models-project> package Kontent.Ai.Delivery.SourceGeneration --prerelease
+dotnet add <web-project> package Kontent.Ai.AspNetCore --prerelease
 ```
+
+`--prerelease` resolves the newest build of the current line while it is a release candidate; drop it once the line is stable. Under central package management add the same versions as `PackageVersion` entries instead.
 
 Keep `Kontent.Ai.Delivery.SourceGeneration` at the same version as `Kontent.Ai.Delivery`; a plain `PackageReference` is enough, NuGet places it in the analyzers folder itself. `Kontent.Ai.Delivery.Caching`, `Kontent.Ai.Urls` or a direct `Kontent.Ai.Delivery.Abstractions` reference are added only when code needs them, not because a sample app lists them.
 

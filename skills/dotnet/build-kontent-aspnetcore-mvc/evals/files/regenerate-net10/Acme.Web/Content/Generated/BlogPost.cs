@@ -18,48 +18,30 @@ using Kontent.Ai.Delivery.SharedModels;
 
 namespace Acme.Web.Content;
 
-[ContentTypeCodename("article")]
-public partial record Article
+[ContentTypeCodename("blog_post")]
+public partial record BlogPost
 {
-    public const string ArticleTypeCodename = "article_type";
-    public const string AuthorCodename = "author";
-    public const string BodyCopyCodename = "body_copy";
+    public const string BodyCodename = "body";
     public const string ImageCodename = "image";
-    public const string IntroductionCodename = "introduction";
     public const string MetadataDescriptionCodename = "metadata__description";
     public const string MetadataKeywordsCodename = "metadata__keywords";
     public const string MetadataTitleCodename = "metadata__title";
-    public const string PublishDateCodename = "publish_date";
-    public const string RelatedArticlesCodename = "related_articles";
     public const string TitleCodename = "title";
-    public const string TopicsCodename = "topics";
     public const string UrlSlugCodename = "url_slug";
-    public const string ContentTypeCodename = "article";
+    public const string ContentTypeCodename = "blog_post";
 
-    [JsonPropertyName("article_type")]
-    public IEnumerable<TaxonomyTerm>? ArticleType { get; init; }
-    [JsonPropertyName("author")]
-    public IEnumerable<IEmbeddedContent>? Author { get; init; }
-    [JsonPropertyName("body_copy")]
-    public RichTextContent? BodyCopy { get; init; }
+    [JsonPropertyName("body")]
+    public RichTextContent? Body { get; init; }
     [JsonPropertyName("image")]
     public IEnumerable<Asset>? Image { get; init; }
-    [JsonPropertyName("introduction")]
-    public string? Introduction { get; init; }
     [JsonPropertyName("metadata__description")]
     public string? MetadataDescription { get; init; }
     [JsonPropertyName("metadata__keywords")]
     public string? MetadataKeywords { get; init; }
     [JsonPropertyName("metadata__title")]
     public string? MetadataTitle { get; init; }
-    [JsonPropertyName("publish_date")]
-    public DateTimeContent? PublishDate { get; init; }
-    [JsonPropertyName("related_articles")]
-    public IEnumerable<IEmbeddedContent>? RelatedArticles { get; init; }
     [JsonPropertyName("title")]
     public string? Title { get; init; }
-    [JsonPropertyName("topics")]
-    public IEnumerable<TaxonomyTerm>? Topics { get; init; }
     [JsonPropertyName("url_slug")]
     public string? UrlSlug { get; init; }
 }

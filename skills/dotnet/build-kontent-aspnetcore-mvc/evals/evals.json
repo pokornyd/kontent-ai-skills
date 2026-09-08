@@ -3,13 +3,13 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Create a new ASP.NET Core MVC app called Acme.Web and wire it to Kontent.ai environment 975bf280-fd91-488c-994c-2f04416e5ee3. Generate strongly typed models for it, but don't invent any pages from the content model yet - I just want the plumbing in place.",
+      "prompt": "Create a new ASP.NET Core MVC app called Acme.Web and wire it to Kontent.ai environment 8a80c10d-3530-016a-4222-675cc7ba3019. Generate strongly typed models for it, but don't invent any pages from the content model yet - I just want the plumbing in place.",
       "expected_output": "A solution with an MVC project from the standard template on an installed stable SDK; stable, mutually compatible Kontent.Ai.Delivery, Kontent.Ai.Delivery.SourceGeneration and Kontent.Ai.AspNetCore packages; a local tool manifest pinning Kontent.Ai.ModelGenerator; generated models in a dedicated directory; DeliveryOptions bound in Program.cs through the builder callback; tag helpers registered; a green build; and no controllers, views or routes derived from content types.",
       "files": [],
       "assertions": [
         "A .config/dotnet-tools.json manifest pins Kontent.Ai.ModelGenerator",
         "Generated model files carry the auto-generated header and a [ContentTypeCodename] attribute",
-        "The web project references Kontent.Ai.Delivery, Kontent.Ai.Delivery.SourceGeneration and Kontent.Ai.AspNetCore at stable (non-prerelease) versions",
+        "The web project references Kontent.Ai.Delivery, Kontent.Ai.Delivery.SourceGeneration and Kontent.Ai.AspNetCore from one package line (the current release-candidate line unless the user or framework forces the previous stable one)",
         "Program.cs registers the client with the AddDeliveryClient form that matches the resolved Delivery major (builder callback on 20.x, IConfiguration overload on 19.x) and binds the DeliveryOptions section",
         "_ViewImports.cshtml contains @addTagHelper *, Kontent.Ai.AspNetCore",
         "No controller, view or route was created for a content type",
@@ -19,7 +19,7 @@
     },
     {
       "id": 2,
-      "prompt": "Add Kontent.ai Delivery to the existing MVC solution in existing-net10-cpm (Acme.slnx) using environment 975bf280-fd91-488c-994c-2f04416e5ee3. Keep our target framework and central package management exactly as they are.",
+      "prompt": "Add Kontent.ai Delivery to the existing MVC solution in existing-net10-cpm (Acme.slnx) using environment 8a80c10d-3530-016a-4222-675cc7ba3019. Keep our target framework and central package management exactly as they are.",
       "expected_output": "Kontent.ai packages added as PackageVersion entries in Directory.Packages.props with version-less PackageReference items in Acme.Web.csproj; TargetFramework unchanged; models generated into the web project; DeliveryOptions bound in Program.cs; a green build; and no edits to files unrelated to the integration.",
       "files": [
         "evals/files/existing-net10-cpm"
@@ -36,7 +36,7 @@
     },
     {
       "id": 3,
-      "prompt": "Scaffold a Kontent.ai MVC app for environment 975bf280-fd91-488c-994c-2f04416e5ee3 and then implement a listing page and a detail page for the Article content type. Keep the Delivery DTO handling out of the controllers, and render the article body rich text and the teaser image with the Kontent.ai ASP.NET Core helpers.",
+      "prompt": "Scaffold a Kontent.ai MVC app for environment 8a80c10d-3530-016a-4222-675cc7ba3019 and then implement a listing page and a detail page for the Article content type. Keep the Delivery DTO handling out of the controllers, and render the article body rich text and the article image with the Kontent.ai ASP.NET Core helpers.",
       "expected_output": "A working vertical slice: a content service that owns IDeliveryClient queries and maps to view models, a thin controller that returns NotFound for a missing item, Razor views using the rich-text and img-asset tag helpers, typed queries with the request cancellation token, a green build, and no global navigation or site structure invented beyond the article pages.",
       "files": [],
       "assertions": [
@@ -45,14 +45,14 @@
         "A missing article (StatusCode NotFound) results in the controller returning NotFound(), while other failed results are logged or thrown rather than rendered as empty content",
         "The listing query uses GetItems<Article>() with element projection or ordering via the generated codename constants",
         "The detail view renders the body with a rich-text tag helper rather than raw HTML output",
-        "The teaser image is rendered with an img-asset tag helper",
+        "The article image asset is rendered with an img-asset tag helper",
         "No navigation menu, homepage composition or routes for content types other than Article were invented",
         "dotnet build completes with zero errors"
       ]
     },
     {
       "id": 4,
-      "prompt": "Build the whole website represented by this Kontent.ai environment: 975bf280-fd91-488c-994c-2f04416e5ee3.",
+      "prompt": "Build the whole website represented by this Kontent.ai environment: 8a80c10d-3530-016a-4222-675cc7ba3019.",
       "expected_output": "The agent explains that navigation, URL hierarchy and page composition cannot be derived from content-type names, inspects the environment enough to propose a bounded first slice (or asks which routable type to implement), and does not silently generate a site map, menu and routes for every content type.",
       "files": [],
       "assertions": [
@@ -92,7 +92,7 @@
     },
     {
       "id": 7,
-      "prompt": "Create a React frontend with an ASP.NET Core BFF that reads content from Kontent.ai environment 975bf280-fd91-488c-994c-2f04416e5ee3.",
+      "prompt": "Create a React frontend with an ASP.NET Core BFF that reads content from Kontent.ai environment 8a80c10d-3530-016a-4222-675cc7ba3019.",
       "expected_output": "The agent recognises that this skill targets server-rendered MVC and does not apply the Razor recipe: no Razor views or tag helpers for content rendering, and a clear statement that the BFF/SPA architecture needs a different approach (it may still set up the Delivery client for an API project).",
       "files": [],
       "assertions": [

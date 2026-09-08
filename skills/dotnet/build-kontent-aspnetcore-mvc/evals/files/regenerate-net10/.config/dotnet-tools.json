@@ -3,7 +3,7 @@
   "isRoot": true,
   "tools": {
     "kontent.ai.modelgenerator": {
-      "version": "10.2.0",
+      "version": "11.0.0-rc.2",
       "commands": [
         "KontentModelGenerator"
       ],
