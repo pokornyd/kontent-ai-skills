@@ -1,0 +1,7 @@
+## Kontent.ai
+
+- Content comes from the Kontent.ai Delivery API through `IDeliveryClient` (`Kontent.Ai.Delivery`), registered in `Program.cs` from the `DeliveryOptions` configuration section. `PreviewApiKey` and `SecureAccessApiKey` live in user secrets or environment variables, never in tracked files.
+- `<generated-directory>/*.cs` are generated Delivery DTOs. Never edit them; regenerate with `<regeneration-command>`. Extend a type in a partial record next to the generated directory, in the same namespace.
+- Generated records never reach a view. Each feature maps `IContentItem<T>` to a view model in `Models/` through a mapper in `Models/Mappers/`, one per content type (`IAsyncMapper<IContentItem<T>, TViewModel>`, composed by constructor injection for nested types). Delivery queries live in a content service; controllers orchestrate and return `NotFound()` for a missing item.
+- View models pass `IRichTextContent` and `IAsset` through unchanged and expose `Guid? ItemId` from `System.Id`. Razor renders them with `<rich-text content="…" />` and `<img-asset asset="…" />` from `Kontent.Ai.AspNetCore`; the tag helpers are registered in `Views/_ViewImports.cshtml`, the resolver with `AddKontentRichText`, the `srcset` width ladder with `ImageTransformationOptions`.
+- Queries return `IDeliveryResult<T>`: check `IsSuccess`; `StatusCode == NotFound` is a missing item, any other failure is an error to log and surface, never empty content. Cancellation throws; pass the request token to `ExecuteAsync`.

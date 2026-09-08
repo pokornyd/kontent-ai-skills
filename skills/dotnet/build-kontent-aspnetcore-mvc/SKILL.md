@@ -20,7 +20,7 @@ Work through the steps in order; each later step assumes the earlier one compile
 - [ ] 2. Inspect before changing
 - [ ] 3. Scaffold or integrate - read `references/scaffold-and-packages.md`
 - [ ] 4. Generate models - read `references/model-generation.md`
-- [ ] 5. Wire Razor rendering - read `references/razor-rendering.md` when models contain rich text or assets
+- [ ] 5. Wire Razor rendering and leave the conventions in the repo - read `references/razor-rendering.md`
 - [ ] 6. Build a content slice only when asked - read `references/content-presentation.md`
 - [ ] 7. Validate and report - read `references/validation.md`
 
@@ -70,15 +70,17 @@ Target the current major line of every Kontent.ai package: Delivery 20.x, AspNet
 
 Follow `references/model-generation.md`. Use `Kontent.Ai.ModelGenerator` as a local .NET tool, generate into a dedicated directory and an app-specific namespace, prefer `--nullability strict`, and build immediately afterwards. A clean build plus `grep -a -c GeneratedTypeProvider <project>/bin/Debug/net10.0/<Assembly>.dll` returning 1 is the whole proof that the source generator saw the attributed models. Roslyn keeps generator output in memory, so nothing under `obj/` will show it. Do not write a throwaway probe file to check that a typed query compiles; it costs a build cycle and proves nothing the grep does not.
 
-## 5. Wire Razor rendering
+## 5. Wire Razor rendering and leave the conventions in the repo
 
-Register `IDeliveryClient` in DI and add `@addTagHelper *, Kontent.Ai.AspNetCore` to `_ViewImports.cshtml`. Configure rich-text resolution and responsive-image widths only when the app renders those element types; `references/razor-rendering.md` has the exact registrations.
+Register `IDeliveryClient` in DI and add `@addTagHelper *, Kontent.Ai.AspNetCore` to `_ViewImports.cshtml`. In a new app also register `AddKontentRichText()` and bind `ImageTransformationOptions`, using the snippets in `references/razor-rendering.md`: both are inert until a view uses them, they cost three lines, and without them the first `<rich-text>` or `<img-asset>` someone writes half-works. In an existing app add each only when the app renders that element type, so the team's startup stays theirs.
+
+Then make the architecture survive the session. A plumbing-only scaffold contains generated DTOs and nothing that says they must not be bound straight into views, so the next developer or agent will do exactly that. For a new app, copy `assets/kontent-conventions.md` into `AGENTS.md` at the repository root (create the file; append the section when one already exists), replacing the two placeholders with the generated directory and the regeneration command. For an existing app, put the section in the report as a proposal; the team's instructions file is theirs to edit.
 
 ## 6. Choose the presentation boundary
 
 Generated records are Delivery element models, not view models.
 
-- Scaffolding and models only: stop at a clean, compiling integration. Empty repository, service or mapper folders add nothing.
+- Scaffolding and models only: stop at a clean, compiling integration with the conventions file in place. Empty repository, service or mapper folders and interfaces without an implementation add nothing; the conventions file carries the intent without dead code.
 - A working page, or a named content type: read `references/content-presentation.md` and implement one vertical slice.
 - Several content types could plausibly drive the first page and the choice affects routes: recommend one, or ask, before building.
 - Whole-site requests ("build the site this environment describes"): explain that navigation, URL hierarchy and page composition cannot be derived from content-type names alone, then offer a bounded first slice.
@@ -95,6 +97,7 @@ Follow `references/validation.md`: restore tools and packages, regenerate with t
 - Models: <namespace> in <directory>; regenerate with `<command>`
 - Content slice: <what was built and the assumptions behind it, or "none requested">
 - Validation: <what ran and passed>; blockers: <none, or list>
+- Next step: <the first slice you would build and why, or the conventions proposal for an existing app>
 ```
 
 ## Gotchas

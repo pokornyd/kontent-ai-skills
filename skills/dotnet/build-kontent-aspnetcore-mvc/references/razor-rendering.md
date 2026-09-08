@@ -13,7 +13,7 @@ In `Views/_ViewImports.cshtml`, next to the standard MVC registration:
 
 ## Rich text
 
-Register the shared resolver when the app renders rich text:
+Register the shared resolver (always in a new app; in an existing app once it renders rich text):
 
 ```csharp
 using Kontent.Ai.AspNetCore.RichText;
@@ -44,7 +44,7 @@ Encode every editor-controlled value that lands in handcrafted HTML. When link t
 
 ## Assets
 
-Configure responsive widths only when asset rendering needs them:
+Configure responsive widths (always in a new app; in an existing app once it renders assets):
 
 ```json
 {

@@ -20,7 +20,8 @@ Run `dotnet test --no-build` only when the preceding build included the test pro
 - generated models are isolated in their directory and reproducible from the documented command;
 - `Kontent.Ai.Delivery.SourceGeneration` is referenced by the compilation containing the attributed models;
 - typed queries compile without a hand-written type registry;
-- `_ViewImports.cshtml` enables the `Kontent.Ai.AspNetCore` tag helpers;
+- `_ViewImports.cshtml` enables the `Kontent.Ai.AspNetCore` tag helpers, and a new app registers `AddKontentRichText` and binds `ImageTransformationOptions`;
+- a new app has the Kontent.ai section in `AGENTS.md` with the real generated directory and regeneration command filled in;
 - any content slice keeps Delivery result and error handling out of controllers;
 - rich text stays structured until Razor resolves it;
 - the app references only content types and elements that exist in the generated model.
