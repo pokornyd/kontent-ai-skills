@@ -68,5 +68,5 @@ Generate into a temporary directory first and diff it against the generated dire
 
 - every expected model has `[ContentTypeCodename("...")]` and lives in the intended namespace;
 - the project builds against the resolved Delivery packages;
-- `grep -rl GeneratedTypeProvider obj/` finds the source-generated provider, which is what makes typed queries work without a manual registration; no probe file is needed;
+- `grep -a -c GeneratedTypeProvider <project>/bin/Debug/net10.0/<Assembly>.dll` returns 1, proving the source-generated provider is in the compiled assembly (generator output is never written under `obj/`); no probe file is needed;
 - the documented command reproduces the same files.

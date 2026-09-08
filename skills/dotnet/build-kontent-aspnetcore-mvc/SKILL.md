@@ -68,7 +68,7 @@ Target the current major line of every Kontent.ai package: Delivery 20.x, AspNet
 
 ## 4. Generate models
 
-Follow `references/model-generation.md`. Use `Kontent.Ai.ModelGenerator` as a local .NET tool, generate into a dedicated directory and an app-specific namespace, prefer `--nullability strict`, and build immediately afterwards. A clean build plus `grep -rl GeneratedTypeProvider obj/` is the whole proof that the source generator saw the attributed models; do not write a throwaway probe file to check that a typed query compiles, it costs a build cycle and proves nothing the grep does not.
+Follow `references/model-generation.md`. Use `Kontent.Ai.ModelGenerator` as a local .NET tool, generate into a dedicated directory and an app-specific namespace, prefer `--nullability strict`, and build immediately afterwards. A clean build plus `grep -a -c GeneratedTypeProvider <project>/bin/Debug/net10.0/<Assembly>.dll` returning 1 is the whole proof that the source generator saw the attributed models. Roslyn keeps generator output in memory, so nothing under `obj/` will show it. Do not write a throwaway probe file to check that a typed query compiles; it costs a build cycle and proves nothing the grep does not.
 
 ## 5. Wire Razor rendering
 
