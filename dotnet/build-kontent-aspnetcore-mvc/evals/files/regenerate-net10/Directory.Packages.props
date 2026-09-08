@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Kontent.Ai.AspNetCore" Version="0.16.1" />
+    <PackageVersion Include="Kontent.Ai.Delivery" Version="19.4.0" />
+    <PackageVersion Include="Kontent.Ai.Delivery.SourceGeneration" Version="19.4.0" />
+  </ItemGroup>
+</Project>

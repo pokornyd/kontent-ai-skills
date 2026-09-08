@@ -1,0 +1,2 @@
+<!-- Stops MSBuild from importing build props of any enclosing repository; the fixture is self-contained. -->
+<Project />

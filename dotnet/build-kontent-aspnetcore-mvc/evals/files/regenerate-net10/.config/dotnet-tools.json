@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "kontent.ai.modelgenerator": {
+      "version": "10.2.0",
+      "commands": [
+        "KontentModelGenerator"
+      ],
+      "rollForward": false
+    }
+  }
+}

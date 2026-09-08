@@ -1,0 +1,8 @@
+# .NET build output from eval fixtures and eval runs
+bin/
+obj/
+
+# Eval workspaces: run outputs, timings, grading, skill snapshots
+*-workspace/
+
+.DS_Store

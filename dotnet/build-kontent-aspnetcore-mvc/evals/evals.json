@@ -1,0 +1,115 @@
+{
+  "skill_name": "build-kontent-aspnetcore-mvc",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a new ASP.NET Core MVC app called Acme.Web and wire it to Kontent.ai environment 975bf280-fd91-488c-994c-2f04416e5ee3. Generate strongly typed models for it, but don't invent any pages from the content model yet - I just want the plumbing in place.",
+      "expected_output": "A solution with an MVC project from the standard template on an installed stable SDK; stable, mutually compatible Kontent.Ai.Delivery, Kontent.Ai.Delivery.SourceGeneration and Kontent.Ai.AspNetCore packages; a local tool manifest pinning Kontent.Ai.ModelGenerator; generated models in a dedicated directory; DeliveryOptions bound in Program.cs through the builder callback; tag helpers registered; a green build; and no controllers, views or routes derived from content types.",
+      "files": [],
+      "assertions": [
+        "A .config/dotnet-tools.json manifest pins Kontent.Ai.ModelGenerator",
+        "Generated model files carry the auto-generated header and a [ContentTypeCodename] attribute",
+        "The web project references Kontent.Ai.Delivery, Kontent.Ai.Delivery.SourceGeneration and Kontent.Ai.AspNetCore at stable (non-prerelease) versions",
+        "Program.cs registers the client with the AddDeliveryClient form that matches the resolved Delivery major (builder callback on 20.x, IConfiguration overload on 19.x) and binds the DeliveryOptions section",
+        "_ViewImports.cshtml contains @addTagHelper *, Kontent.Ai.AspNetCore",
+        "No controller, view or route was created for a content type",
+        "dotnet build completes with zero errors",
+        "No Preview or Secure Access API key appears in any file in the output"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Add Kontent.ai Delivery to the existing MVC solution in existing-net10-cpm (Acme.slnx) using environment 975bf280-fd91-488c-994c-2f04416e5ee3. Keep our target framework and central package management exactly as they are.",
+      "expected_output": "Kontent.ai packages added as PackageVersion entries in Directory.Packages.props with version-less PackageReference items in Acme.Web.csproj; TargetFramework unchanged; models generated into the web project; DeliveryOptions bound in Program.cs; a green build; and no edits to files unrelated to the integration.",
+      "files": ["evals/files/existing-net10-cpm"],
+      "assertions": [
+        "Acme.Web.csproj still targets net10.0",
+        "Directory.Packages.props contains PackageVersion entries for every Kontent.ai package added",
+        "No PackageReference in Acme.Web.csproj carries an inline Version attribute",
+        "Generated models exist in a dedicated directory inside the web project and compile",
+        "Program.cs registers the client with the AddDeliveryClient form that matches the resolved Delivery major and binds the DeliveryOptions section",
+        "dotnet build completes with zero errors",
+        "Files unrelated to the integration (HomeController.cs, existing views, wwwroot) are unchanged"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Scaffold a Kontent.ai MVC app for environment 975bf280-fd91-488c-994c-2f04416e5ee3 and then implement a listing page and a detail page for the Article content type. Keep the Delivery DTO handling out of the controllers, and render the article body rich text and the teaser image with the Kontent.ai ASP.NET Core helpers.",
+      "expected_output": "A working vertical slice: a content service that owns IDeliveryClient queries and maps to view models, a thin controller that returns NotFound for a missing item, Razor views using the rich-text and img-asset tag helpers, typed queries with the request cancellation token, a green build, and no global navigation or site structure invented beyond the article pages.",
+      "files": [],
+      "assertions": [
+        "A service or similar class depends on IDeliveryClient and builds the Article queries; no controller references IDeliveryClient or IDeliveryResult",
+        "The detail query passes the request CancellationToken to ExecuteAsync",
+        "A missing article (StatusCode NotFound) results in the controller returning NotFound(), while other failed results are logged or thrown rather than rendered as empty content",
+        "The listing query uses GetItems<Article>() with element projection or ordering via the generated codename constants",
+        "The detail view renders the body with a rich-text tag helper rather than raw HTML output",
+        "The teaser image is rendered with an img-asset tag helper",
+        "No navigation menu, homepage composition or routes for content types other than Article were invented",
+        "dotnet build completes with zero errors"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Build the whole website represented by this Kontent.ai environment: 975bf280-fd91-488c-994c-2f04416e5ee3.",
+      "expected_output": "The agent explains that navigation, URL hierarchy and page composition cannot be derived from content-type names, inspects the environment enough to propose a bounded first slice (or asks which routable type to implement), and does not silently generate a site map, menu and routes for every content type.",
+      "files": [],
+      "assertions": [
+        "The response states that a full site cannot be inferred from the content model alone",
+        "The agent either asks the user which content type to start with or recommends one specific bounded first slice",
+        "No navigation menu or URL hierarchy spanning multiple content types was generated without confirmation",
+        "Any code that was produced compiles"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Generate the MVC integration for our secured Kontent.ai environment <environment-id>. The Secure Access key is in the KONTENT_SECURE_ACCESS_KEY environment variable - use it, but make sure it never ends up in the repo or in your summary.",
+      "expected_output": "Requires a real Secure Access environment; replace <environment-id> and export the key before running. The agent uses the key through a temporary, permission-restricted appSettings.json for the model generator (or, as a last resort, the command line), deletes the temporary configuration afterwards, stores the app's key in user secrets or documents the environment variable, and neither prints nor commits the key.",
+      "files": [],
+      "assertions": [
+        "The Secure Access key value does not appear in any file under the output directory",
+        "The Secure Access key value does not appear in the agent's final report",
+        "The model generator was run with a temporary configuration or working directory that was removed afterwards",
+        "The application reads SecureAccessApiKey from user secrets or an environment variable, and UseSecureAccess is enabled in configuration",
+        "dotnet build completes with zero errors"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Add the latest Kontent.ai MVC integration to the Legacy.Web app in existing-net8. It's on net8.0 and we can't move it right now.",
+      "expected_output": "The agent keeps net8.0 and installs the newest stable net8.0-compatible releases (Delivery 19.x, AspNetCore 0.16.x) with a matching model generator, gets a green build, and explains the framework constraint and the upgrade path in the report.",
+      "files": ["evals/files/existing-net8"],
+      "assertions": [
+        "Legacy.Web.csproj still targets net8.0",
+        "No Kontent.ai package reference uses a prerelease version",
+        "The installed Kontent.ai packages restore successfully on net8.0 (no NU1202)",
+        "The report explains which package line was chosen and why, and names a framework upgrade as a separate choice if a newer line requires it",
+        "dotnet build completes with zero errors"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Create a React frontend with an ASP.NET Core BFF that reads content from Kontent.ai environment 975bf280-fd91-488c-994c-2f04416e5ee3.",
+      "expected_output": "The agent recognises that this skill targets server-rendered MVC and does not apply the Razor recipe: no Razor views or tag helpers for content rendering, and a clear statement that the BFF/SPA architecture needs a different approach (it may still set up the Delivery client for an API project).",
+      "files": [],
+      "assertions": [
+        "The response states that this MVC skill does not fit a React plus BFF architecture",
+        "No Razor views, _ViewImports tag-helper registration or rich-text/img-asset markup were created for content rendering",
+        "If any Delivery client registration was produced, it uses the AddDeliveryClient form that matches the resolved Delivery major"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "The content model changed - regenerate the Kontent.ai models in the Acme.Web app in regenerate-net10 and make sure nothing stale is left behind.",
+      "expected_output": "Models regenerated with the pinned local tool into a temporary directory and diffed against Content/Generated; the stale LegacyBanner.cs record is removed; the hand-written partial Content/Article.cs is preserved; the project rebuilds; and the summary lists removed or renamed types.",
+      "files": ["evals/files/regenerate-net10"],
+      "assertions": [
+        "Content/Generated/LegacyBanner.cs no longer exists after regeneration",
+        "Content/Article.cs (the hand-written partial) is unchanged",
+        "Every file remaining in Content/Generated carries the auto-generated header",
+        "The tool manifest's pinned Kontent.Ai.ModelGenerator version was used, not a global install or a different version",
+        "The report lists the content types that were removed or renamed",
+        "dotnet build completes with zero errors"
+      ]
+    }
+  ]
+}
