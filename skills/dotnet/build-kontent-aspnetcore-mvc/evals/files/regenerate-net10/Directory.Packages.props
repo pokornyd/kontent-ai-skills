@@ -3,8 +3,8 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Kontent.Ai.AspNetCore" Version="1.0.0-rc.2" />
-    <PackageVersion Include="Kontent.Ai.Delivery" Version="20.0.0-rc.2" />
-    <PackageVersion Include="Kontent.Ai.Delivery.SourceGeneration" Version="20.0.0-rc.2" />
+    <PackageVersion Include="Kontent.Ai.AspNetCore" Version="1.0.0-rc.3" />
+    <PackageVersion Include="Kontent.Ai.Delivery" Version="20.0.0-rc.3" />
+    <PackageVersion Include="Kontent.Ai.Delivery.SourceGeneration" Version="20.0.0-rc.3" />
   </ItemGroup>
 </Project>

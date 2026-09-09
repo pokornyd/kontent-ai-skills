@@ -4,13 +4,13 @@
     {
       "id": 1,
       "prompt": "Create a new ASP.NET Core MVC app called Acme.Web and wire it to Kontent.ai environment 8a80c10d-3530-016a-4222-675cc7ba3019. Generate strongly typed models for it, but don't invent any pages from the content model yet - I just want the plumbing in place.",
-      "expected_output": "A solution with an MVC project from the standard template on an installed stable SDK; Kontent.Ai.Delivery, Kontent.Ai.Delivery.SourceGeneration and Kontent.Ai.AspNetCore from the current package line (release candidates installed with --prerelease); a local tool manifest at .config/dotnet-tools.json pinning Kontent.Ai.ModelGenerator; generated models in a dedicated directory; DeliveryOptions bound in Program.cs with AddDeliveryClient(builder.Configuration); tag helpers registered, AddKontentRichText called and ImageTransformationOptions bound with a ResponsiveWidths ladder in appsettings.json; an AGENTS.md carrying the Kontent.ai conventions section with the real generated directory and regeneration command; a .gitignore; a green build; and no controllers, views or routes derived from content types.",
+      "expected_output": "A solution with an MVC project from the standard template on an installed stable SDK; Kontent.Ai.Delivery, Kontent.Ai.Delivery.SourceGeneration and Kontent.Ai.AspNetCore from the current package line (release candidates installed with --prerelease); a local tool manifest at .config/dotnet-tools.json pinning Kontent.Ai.ModelGenerator; generated models in a dedicated directory; DeliveryOptions bound in Program.cs through the builder callback (delivery.Options.BindConfiguration); tag helpers registered, AddKontentRichText called and ImageTransformationOptions bound with a ResponsiveWidths ladder in appsettings.json; an AGENTS.md carrying the Kontent.ai conventions section with the real generated directory and regeneration command; a .gitignore; a green build; and no controllers, views or routes derived from content types.",
       "files": [],
       "assertions": [
         "A .config/dotnet-tools.json manifest pins Kontent.Ai.ModelGenerator",
         "Generated model files carry the auto-generated header and a [ContentTypeCodename] attribute",
         "The web project references Kontent.Ai.Delivery, Kontent.Ai.Delivery.SourceGeneration and Kontent.Ai.AspNetCore from one package line (the current release-candidate line unless the user or framework forces the previous stable one)",
-        "Program.cs registers the client with AddDeliveryClient(builder.Configuration) or a section overload, binding the DeliveryOptions section",
+        "Program.cs registers the client with the builder callback form, AddDeliveryClient(delivery => delivery.Options.BindConfiguration(\"DeliveryOptions\")) or equivalent, not an IConfiguration or Action<DeliveryOptions> overload",
         "_ViewImports.cshtml contains @addTagHelper *, Kontent.Ai.AspNetCore",
         "Program.cs calls AddKontentRichText and binds ImageTransformationOptions, and appsettings.json has an ImageTransformationOptions section with ResponsiveWidths",
         "AGENTS.md exists at the root with a Kontent.ai section that states generated records are DTOs mapped to view models through mappers, names the generated directory and gives the regeneration command",
@@ -31,7 +31,7 @@
         "Directory.Packages.props contains PackageVersion entries for every Kontent.ai package added",
         "No PackageReference in Acme.Web.csproj carries an inline Version attribute",
         "Generated models exist in a dedicated directory inside the web project and compile",
-        "Program.cs registers the client with AddDeliveryClient(builder.Configuration) or a section overload, binding the DeliveryOptions section",
+        "Program.cs registers the client with the builder callback form, AddDeliveryClient(delivery => delivery.Options.BindConfiguration(\"DeliveryOptions\")) or equivalent, not an IConfiguration or Action<DeliveryOptions> overload",
         "dotnet build completes with zero errors",
         "Files unrelated to the integration (HomeController.cs, existing views, wwwroot) are unchanged",
         "No AGENTS.md or CLAUDE.md was created or edited in the existing solution; the report proposes the conventions section instead"
@@ -47,7 +47,7 @@
         "A mapper per content type (IAsyncMapper or IMapper over IContentItem<T>) produces the view models, and the article view model exposes ItemId, IRichTextContent and IAsset",
         "The detail query passes the request CancellationToken to ExecuteAsync",
         "A missing article (StatusCode NotFound) results in the controller returning NotFound(), while other failed results are logged or thrown rather than rendered as empty content",
-        "The listing query uses GetItems<Article>() with element projection or ordering via the generated codename constants",
+        "The listing query uses GetItems<Article>() with element projection and OrderByElement via the generated codename constants",
         "The detail view renders the body with a rich-text tag helper rather than raw HTML output",
         "The article image asset is rendered with an img-asset tag helper",
         "No navigation menu, homepage composition or routes for content types other than Article were invented",
@@ -102,7 +102,7 @@
       "assertions": [
         "The response states that this MVC skill does not fit a React plus BFF architecture",
         "No Razor views, _ViewImports tag-helper registration or rich-text/img-asset markup were created for content rendering",
-        "If any Delivery client registration was produced, it uses AddDeliveryClient(builder.Configuration) or a section overload"
+        "If any Delivery client registration was produced, it uses the builder callback form of AddDeliveryClient"
       ]
     },
     {

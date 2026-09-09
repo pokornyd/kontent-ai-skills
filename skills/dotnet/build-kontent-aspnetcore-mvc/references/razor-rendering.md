@@ -24,13 +24,10 @@ builder.Services.AddKontentRichText();
 Keep `IRichTextContent` on the view model and let Razor resolve it:
 
 ```razor
-@if (Model.Body is not null)
-{
-    <rich-text content="@Model.Body" />
-}
+<rich-text content="@Model.Body" />
 ```
 
-The resolver output replaces the element; there is no `<rich-text>` wrapper in the page. The default resolver encodes text nodes and renders inline images. Embedded content and content-item links render as HTML comments until a resolver is configured, so when the generated models contain them, configure the builder with the real types and routes:
+The resolver output replaces the element; there is no `<rich-text>` wrapper in the page, and a `null` content renders nothing, so no guard is needed. The default resolver encodes text nodes and renders inline images. Embedded content and content-item links render as HTML comments until a resolver is configured, so when the generated models contain them, configure the builder with the real types and routes:
 
 ```csharp
 builder.Services.AddKontentRichText(resolvers => resolvers
@@ -40,7 +37,7 @@ builder.Services.AddKontentRichText(resolvers => resolvers
         ValueTask.FromResult($"<a href=\"/articles/{link.ItemId}\">")));
 ```
 
-Encode every editor-controlled value that lands in handcrafted HTML. When link targets need routing services, use the overload that exposes `IServiceProvider` and resolve only singleton-safe dependencies, because the resolver is built once per application, not per request. For partial views or an explicit cancellation token, `@await Model.Body.ToHtmlContentAsync(resolver, ViewContext.HttpContext.RequestAborted)` is the equivalent extension method.
+Encode every editor-controlled value that lands in handcrafted HTML. When link targets need routing services, use the overload that exposes `IServiceProvider` and resolve only singleton-safe dependencies, because the resolver is built once per application, not per request. For partial views or an explicit cancellation token there is `@await Model.Body.ToHtmlContentAsync(Resolver, ViewContext.HttpContext.RequestAborted)`, but pass the resolver explicitly (`@inject IHtmlResolver Resolver`): an extension method cannot reach the container, so without one it uses the SDK's built-in defaults, not what `AddKontentRichText` registered. Only the tag helper picks that up on its own.
 
 ## Assets
 
@@ -69,7 +66,7 @@ Render an `IAsset` with meaningful alternative text:
            default-width="768" />
 ```
 
-`<media-condition>` children map viewport ranges to image widths for the `sizes` attribute. Fixed `width`/`height` attributes request one transformed size and intentionally drop `srcset`/`sizes`; use them only when the layout needs a single size.
+A `null` asset renders nothing, so `asset="@Model.Image"` needs no guard. `<media-condition>` children map viewport ranges to image widths for the `sizes` attribute; `srcset` candidates are capped at the asset's own width because the CDN never upscales. Fixed `width`/`height` attributes request one transformed size and intentionally drop `srcset`/`sizes`; use them only when the layout needs a single size.
 
 ## Out of scope by default
 

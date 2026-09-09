@@ -80,10 +80,10 @@ Bind the SDK's standard section:
 ```csharp
 using Kontent.Ai.Delivery;
 
-builder.Services.AddDeliveryClient(builder.Configuration);
+builder.Services.AddDeliveryClient(delivery => delivery.Options.BindConfiguration("DeliveryOptions"));
 ```
 
-The overload binds the `DeliveryOptions` section by name and keeps `IOptionsMonitor` reloads working; `AddDeliveryClient(builder.Configuration, "OtherSection")` and `AddDeliveryClient(section)` exist for a differently named section, and every configuration overload takes optional `configureHttpClient` and `configureResilience` callbacks when the pipeline needs customising. The `using Kontent.Ai.Delivery;` line is required; implicit usings do not include it.
+`delivery.Options` is an `OptionsBuilder<DeliveryOptions>`, so `Configure`, `Bind`, `BindConfiguration`, `PostConfigure` and `Validate` are all there, and `BindConfiguration` keeps `IOptionsMonitor` reloads working. The pipeline hangs off the same builder: `delivery.HttpClient` (an `IHttpClientBuilder`), `delivery.ConfigureResilience(...)`, and, when the user asks for caching, `delivery.UseMemoryCache(cache => ...)` from `Kontent.Ai.Delivery.Caching`. A named client is `AddDeliveryClient("preview", delivery => ...)`. The `using Kontent.Ai.Delivery;` line is required; implicit usings do not include it. On the 19.x line the equivalent is `AddDeliveryClient(builder.Configuration)`.
 
 The environment ID may live in tracked configuration when the repository permits it. `PreviewApiKey` and `SecureAccessApiKey` go to user secrets in development and to environment variables such as `DeliveryOptions__SecureAccessApiKey` in deployment:
 

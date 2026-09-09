@@ -94,19 +94,19 @@ public sealed class ContentService(IDeliveryClient client, ILogger<ContentServic
 
         logger.LogError(result.Error?.Exception, "Delivery request for article '{Slug}' failed with {StatusCode}: {Message}",
             slug, result.StatusCode, result.Error?.Message);
-        throw new InvalidOperationException($"Delivery request for article '{slug}' failed with {(int)result.StatusCode}.", result.Error?.Exception);
+        throw new DeliveryRequestException($"Delivery request for article '{slug}' failed.", result.StatusCode, result.Error, result.RequestUrl);
     }
 
     public Task<IDeliveryResult<IDeliveryItemListingResponse<Article>>> GetArticlesAsync(int skip, int take, CancellationToken cancellationToken)
         => client.GetItems<Article>()
             .WithElements(Article.TitleCodename, Article.UrlSlugCodename, Article.IntroductionCodename, Article.ImageCodename)
-            .OrderBy($"elements.{Article.PublishDateCodename}", OrderingMode.Descending)
+            .OrderByElement(Article.PublishDateCodename, OrderingMode.Descending)
             .Skip(skip).Limit(take).WithTotalCount()
             .ExecuteAsync(cancellationToken);
 }
 ```
 
-The shape that matters: the request token is passed through, a missing item becomes `null` (an empty listing for a slug lookup, `StatusCode == NotFound` for `GetItem<T>(codename)`), and every other failure is logged with the SDK's diagnostics and surfaced through the app's error policy instead of being swallowed as empty content. Throwing is the placeholder; an app with a result type or an error view uses that. Listings project with `WithElements` to the fields the card needs and page with `Skip`/`Limit`/`WithTotalCount()` (`Pagination.TotalCount`, `HasNextPage`); the detail query keeps the full element set. `Depth` fetches linked items; keep it at what the view renders. Reserve `GetItemsFeed` for bulk traversal.
+The shape that matters: the request token is passed through, a missing item becomes `null` (an empty listing for a slug lookup, `StatusCode == NotFound` for `GetItem<T>(codename)`), and every other failure is logged with the SDK's diagnostics and surfaced through the app's error policy instead of being swallowed as empty content. `DeliveryRequestException` is the SDK's own type for exactly this, sealed, carrying the status code, the API's `IError` and the request ID; an app with a result type or an error view uses that instead. Listings project with `WithElements` to the fields the card needs and page with `Skip`/`Limit`/`WithTotalCount()` (`Pagination.TotalCount`, `HasNextPage`); the detail query keeps the full element set. `Depth` fetches linked items; keep it at what the view renders. Reserve `GetItemsFeed` for bulk traversal.
 
 ## Controller
 
