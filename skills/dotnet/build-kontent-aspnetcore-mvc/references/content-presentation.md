@@ -8,7 +8,7 @@ The shape below is the one the official [Kontent.ai MVC sample app](https://gith
 
 ```text
 Services/Content/IContentService.cs, ContentService.cs   queries, projection, paging, result handling
-Services/Content/ContentPage.cs                           app-owned page type, so no Delivery envelope escapes
+Models/PagedResult.cs                                     app-owned page type, so no Delivery envelope escapes
 Models/<Type>ViewModel.cs                                 what a view renders
 Models/Mappers/IMapper.cs, IAsyncMapper.cs               the two mapper contracts
 Models/Mappers/<Type>Mapper.cs                            one mapper per content type
@@ -98,7 +98,7 @@ public sealed class ContentService(IDeliveryClient client, ILogger<ContentServic
         throw new DeliveryRequestException($"Delivery request for article '{slug}' failed.", result.StatusCode, result.Error, result.RequestUrl);
     }
 
-    public async Task<ContentPage<IContentItem<Article>>> GetArticlesAsync(int skip, int take, CancellationToken cancellationToken)
+    public async Task<PagedResult<IContentItem<Article>>> GetArticlesAsync(int skip, int take, CancellationToken cancellationToken)
     {
         var result = await client.GetItems<Article>()
             .WithElements(Article.TitleCodename, Article.UrlSlugCodename, Article.IntroductionCodename, Article.ImageCodename)
@@ -108,14 +108,25 @@ public sealed class ContentService(IDeliveryClient client, ILogger<ContentServic
 
         EnsureSuccess(result, "the article listing");
 
-        var items = result.Value.Items;
-        return new ContentPage<IContentItem<Article>>(items, result.Value.Pagination.TotalCount ?? items.Count, skip, take);
+        return new PagedResult<IContentItem<Article>>(
+            result.Value.Items, result.Value.Pagination.TotalCount, skip, take);
     }
 }
-
-// An app-owned page, so no Delivery envelope escapes the service.
-public sealed record ContentPage<T>(IReadOnlyList<T> Items, int TotalCount, int Skip, int Limit);
 ```
+
+```csharp
+// Models/PagedResult.cs - app-owned, so no Delivery envelope escapes the service.
+public record PagedResult<T>(IReadOnlyList<T> Items, int? TotalCount, int Skip, int Limit)
+{
+    public int PageNumber => Limit > 0 ? (Skip / Limit) + 1 : 1;
+    public bool HasPrevious => Skip > 0;
+    public bool HasNext => TotalCount is { } total ? Skip + Items.Count < total : Items.Count == Limit;
+}
+```
+
+`TotalCount` stays nullable rather than defaulting to the number of items returned: the Delivery API only sends a total when the query asked for one with `WithTotalCount()`, and substituting the page size would render "showing 1-12 of 12" on the first page of a hundred. `HasNext` falls back to a full page instead. Name it `PagedResult`, not `ContentPage`: `Page` is a common content type codename, so a generated `Page` record often sits in the same solution.
+
+Once a second listing appears, project the paging metadata onto a small item-agnostic view model so one `_Pager.cshtml` partial serves every listing. One listing does not need that yet.
 
 Draw the boundary precisely, because "keep Delivery out of the controller" is not the same as "keep every Delivery type out". `IDeliveryResult`, `IDeliveryItemListingResponse` and `Pagination` stop at the service, which is why the listing returns an app-owned `ContentPage<T>`. `IContentItem<T>` deliberately does cross, because it is the mapper's declared source type: `System.Id` lives there and Smart Link needs it later. `IRichTextContent` and `IAsset` cross too, all the way to Razor, because the tag helpers consume them. The rule is that nothing describing a *request* escapes the service, while the types describing *content* travel to the layer that renders them.
 
