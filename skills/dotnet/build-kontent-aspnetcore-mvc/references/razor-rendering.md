@@ -62,7 +62,7 @@ builder.Services.Configure<ImageTransformationOptions>(
     builder.Configuration.GetSection(nameof(ImageTransformationOptions)));
 ```
 
-Render an `IAsset` with meaningful alternative text. The API sends an unfilled description as an empty string, not `null`, although `IAsset.Description` is typed nullable, so a `??` fallback never fires; test for blank:
+Render an `IAsset` with meaningful alternative text. An asset with no description arrives as `null` from some environments and as `""` from others, so a `??` fallback fires in only half the cases; test for blank instead:
 
 ```razor
 <img-asset asset="@Model.HeroImage"
