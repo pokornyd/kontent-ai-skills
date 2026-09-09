@@ -58,13 +58,15 @@ builder.Services.Configure<ImageTransformationOptions>(
     builder.Configuration.GetSection(nameof(ImageTransformationOptions)));
 ```
 
-Render an `IAsset` with meaningful alternative text:
+Render an `IAsset` with meaningful alternative text. The API sends an unfilled description as an empty string, not `null`, although `IAsset.Description` is typed nullable, so a `??` fallback never fires; test for blank:
 
 ```razor
 <img-asset asset="@Model.HeroImage"
-           title="@(Model.HeroImage.Description ?? Model.Title)"
+           title="@(string.IsNullOrWhiteSpace(Model.HeroImage?.Description) ? Model.Title : Model.HeroImage.Description)"
            default-width="768" />
 ```
+
+In practice that check belongs on the view model as a computed property, so every view gets the same fallback.
 
 A `null` asset renders nothing, so `asset="@Model.Image"` needs no guard. `<media-condition>` children map viewport ranges to image widths for the `sizes` attribute; `srcset` candidates are capped at the asset's own width because the CDN never upscales. Fixed `width`/`height` attributes request one transformed size and intentionally drop `srcset`/`sizes`; use them only when the layout needs a single size.
 
