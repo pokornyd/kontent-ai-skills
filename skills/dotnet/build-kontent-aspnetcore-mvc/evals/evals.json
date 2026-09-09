@@ -43,7 +43,7 @@
       "expected_output": "A working vertical slice: a content service that owns IDeliveryClient queries and maps to view models, a thin controller that returns NotFound for a missing item, Razor views using the rich-text and img-asset tag helpers, typed queries with the request cancellation token, a green build, and no global navigation or site structure invented beyond the article pages.",
       "files": [],
       "assertions": [
-        "A service or similar class depends on IDeliveryClient and builds the Article queries; no controller references IDeliveryClient or IDeliveryResult",
+        "A service or similar class depends on IDeliveryClient and builds the Article queries; no IDeliveryResult, IDeliveryItemListingResponse or Pagination type escapes it, and no controller references IDeliveryClient",
         "A mapper per content type (IAsyncMapper or IMapper over IContentItem<T>) produces the view models, and the article view model exposes ItemId, IRichTextContent and IAsset",
         "The detail query passes the request CancellationToken to ExecuteAsync",
         "A missing article (StatusCode NotFound) results in the controller returning NotFound(), while other failed results are logged or thrown rather than rendered as empty content",
@@ -51,7 +51,8 @@
         "The detail view renders the body with a rich-text tag helper rather than raw HTML output",
         "The article image asset is rendered with an img-asset tag helper",
         "No navigation menu, homepage composition or routes for content types other than Article were invented",
-        "dotnet build completes with zero errors"
+        "dotnet build completes with zero errors",
+        "The rendered article detail page contains no missing-resolver HTML comment, so any component embedded in the body has a registered resolver"
       ]
     },
     {
@@ -118,7 +119,8 @@
         "Every file remaining in Content/Generated carries the auto-generated header",
         "The tool manifest's pinned Kontent.Ai.ModelGenerator version was used, not a global install or a different version",
         "The report lists the content types that were removed or renamed",
-        "dotnet build completes with zero errors"
+        "dotnet build completes with zero errors",
+        "The regeneration was performed by running the pinned tool, not by deleting the stale file by hand: the report names the temporary output directory it diffed against"
       ]
     }
   ]

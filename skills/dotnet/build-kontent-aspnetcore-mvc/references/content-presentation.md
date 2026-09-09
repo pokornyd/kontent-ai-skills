@@ -8,6 +8,7 @@ The shape below is the one the official [Kontent.ai MVC sample app](https://gith
 
 ```text
 Services/Content/IContentService.cs, ContentService.cs   queries, projection, paging, result handling
+Services/Content/ContentPage.cs                           app-owned page type, so no Delivery envelope escapes
 Models/<Type>ViewModel.cs                                 what a view renders
 Models/Mappers/IMapper.cs, IAsyncMapper.cs               the two mapper contracts
 Models/Mappers/<Type>Mapper.cs                            one mapper per content type
@@ -97,16 +98,28 @@ public sealed class ContentService(IDeliveryClient client, ILogger<ContentServic
         throw new DeliveryRequestException($"Delivery request for article '{slug}' failed.", result.StatusCode, result.Error, result.RequestUrl);
     }
 
-    public Task<IDeliveryResult<IDeliveryItemListingResponse<Article>>> GetArticlesAsync(int skip, int take, CancellationToken cancellationToken)
-        => client.GetItems<Article>()
+    public async Task<ContentPage<IContentItem<Article>>> GetArticlesAsync(int skip, int take, CancellationToken cancellationToken)
+    {
+        var result = await client.GetItems<Article>()
             .WithElements(Article.TitleCodename, Article.UrlSlugCodename, Article.IntroductionCodename, Article.ImageCodename)
             .OrderByElement(Article.PublishDateCodename, OrderingMode.Descending)
             .Skip(skip).Limit(take).WithTotalCount()
             .ExecuteAsync(cancellationToken);
+
+        EnsureSuccess(result, "the article listing");
+
+        var items = result.Value.Items;
+        return new ContentPage<IContentItem<Article>>(items, result.Value.Pagination.TotalCount ?? items.Count, skip, take);
+    }
 }
+
+// An app-owned page, so no Delivery envelope escapes the service.
+public sealed record ContentPage<T>(IReadOnlyList<T> Items, int TotalCount, int Skip, int Limit);
 ```
 
-The shape that matters: the request token is passed through, a missing item becomes `null` (an empty listing for a slug lookup, `StatusCode == NotFound` for `GetItem<T>(codename)`), and every other failure is logged with the SDK's diagnostics and surfaced through the app's error policy instead of being swallowed as empty content. `DeliveryRequestException` is the SDK's own type for exactly this, sealed, carrying the status code, the API's `IError` and the request ID; an app with a result type or an error view uses that instead. Listings project with `WithElements` to the fields the card needs and page with `Skip`/`Limit`/`WithTotalCount()` (`Pagination.TotalCount`, `HasNextPage`); the detail query keeps the full element set. `Depth` fetches linked items; keep it at what the view renders. Reserve `GetItemsFeed` for bulk traversal.
+Draw the boundary precisely, because "keep Delivery out of the controller" is not the same as "keep every Delivery type out". `IDeliveryResult`, `IDeliveryItemListingResponse` and `Pagination` stop at the service, which is why the listing returns an app-owned `ContentPage<T>`. `IContentItem<T>` deliberately does cross, because it is the mapper's declared source type: `System.Id` lives there and Smart Link needs it later. `IRichTextContent` and `IAsset` cross too, all the way to Razor, because the tag helpers consume them. The rule is that nothing describing a *request* escapes the service, while the types describing *content* travel to the layer that renders them.
+
+The rest of the shape: the request token is passed through, a missing item becomes `null` (an empty listing for a slug lookup, `StatusCode == NotFound` for `GetItem<T>(codename)`), and every other failure is logged with the SDK's diagnostics and surfaced through the app's error policy instead of being swallowed as empty content. `DeliveryRequestException` is the SDK's own type for exactly this, sealed, carrying the status code, the API's `IError` and the request ID; an app with a result type or an error view uses that instead. Listings project with `WithElements` to the fields the card needs and page with `Skip`/`Limit`/`WithTotalCount()` (`Pagination.TotalCount`, `HasNextPage`); the detail query keeps the full element set. `Depth` fetches linked items; keep it at what the view renders. Reserve `GetItemsFeed` for bulk traversal.
 
 ## Controller
 

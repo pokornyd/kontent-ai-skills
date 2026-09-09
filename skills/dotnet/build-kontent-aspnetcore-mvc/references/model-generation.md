@@ -68,5 +68,5 @@ Generate into a temporary directory first and diff it against the generated dire
 
 - every expected model has `[ContentTypeCodename("...")]` and lives in the intended namespace;
 - the project builds against the resolved Delivery packages;
-- `grep -a -c GeneratedTypeProvider <project>/bin/Debug/net10.0/<Assembly>.dll` returns 1, proving the source-generated provider is in the compiled assembly (generator output is never written under `obj/`); no probe file is needed;
+- after `dotnet build`, `grep -a -c GeneratedTypeProvider "$(dotnet build <models-project> -getProperty:TargetPath | tail -1)"` returns 1, so the provider reached the compiled assembly (generator output is never written under `obj/`, and `-getProperty:TargetPath` avoids hard-coding a framework or configuration); this shows the generator ran, not that a query resolves at runtime, and needs no probe file;
 - the documented command reproduces the same files.
