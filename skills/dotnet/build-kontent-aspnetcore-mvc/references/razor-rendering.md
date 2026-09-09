@@ -33,11 +33,15 @@ The resolver output replaces the element; there is no `<rich-text>` wrapper in t
 builder.Services.AddKontentRichText(resolvers => resolvers
     .WithContentResolver<Quote>(quote =>
         $"<blockquote>{HtmlEncoder.Default.Encode(quote.Elements.Text ?? string.Empty)}</blockquote>")
-    .WithContentItemLinkResolver("article", (link, _) =>
-        ValueTask.FromResult($"<a href=\"/articles/{link.ItemId}\">")));
+    .WithContentItemLinkResolver("article", async (link, resolveChildren) =>
+    {
+        var slug = link.Metadata?.UrlSlug ?? link.ItemId.ToString();
+        var inner = await resolveChildren(link.Children);
+        return $"<a href=\"/articles/{slug}\">{inner}</a>";
+    }));
 ```
 
-Encode every editor-controlled value that lands in handcrafted HTML. When link targets need routing services, use the overload that exposes `IServiceProvider` and resolve only singleton-safe dependencies, because the resolver is built once per application, not per request. For partial views or an explicit cancellation token there is `@await Model.Body.ToHtmlContentAsync(Resolver, ViewContext.HttpContext.RequestAborted)`, but pass the resolver explicitly (`@inject IHtmlResolver Resolver`): an extension method cannot reach the container, so without one it uses the SDK's built-in defaults, not what `AddKontentRichText` registered. Only the tag helper picks that up on its own.
+A link resolver renders the **whole** anchor, not its opening tag: there is no `link.Text`, so the authored link text and its inline formatting come from `await resolveChildren(link.Children)`, and returning only `<a href=...>` produces an unclosed, empty anchor. Encode every editor-controlled value that lands in handcrafted HTML. When link targets need routing services, use the overload that exposes `IServiceProvider` and resolve only singleton-safe dependencies, because the resolver is built once per application, not per request. For partial views or an explicit cancellation token there is `@await Model.Body.ToHtmlContentAsync(Resolver, ViewContext.HttpContext.RequestAborted)`, but pass the resolver explicitly (`@inject IHtmlResolver Resolver`): an extension method cannot reach the container, so without one it uses the SDK's built-in defaults, not what `AddKontentRichText` registered. Only the tag helper picks that up on its own.
 
 ## Assets
 
