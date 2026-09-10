@@ -1,7 +1,10 @@
+using Kontent.Ai.Delivery;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddDeliveryClient(delivery => delivery.Options.BindConfiguration("DeliveryOptions"));
 
 var app = builder.Build();
 

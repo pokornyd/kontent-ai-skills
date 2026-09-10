@@ -113,11 +113,12 @@
     {
       "id": 8,
       "prompt": "The content model changed - regenerate the Kontent.ai models in the Acme.Web app in regenerate-net10 and make sure nothing stale is left behind.",
-      "expected_output": "Models regenerated with the pinned local tool into a temporary directory and diffed against Content/Generated; the stale LegacyBanner.cs record is removed; the hand-written partial Content/Article.cs is preserved; the project rebuilds; and the summary lists removed or renamed types.",
+      "expected_output": "Models regenerated with the manifest-pinned local tool into a temporary directory and diffed against Content/Generated; the environment ID read from the app's own DeliveryOptions rather than guessed; the stale LegacyBanner.cs removed and the topics element restored on Article; the hand-written partial Content/Article.cs preserved; the project rebuilds; and the summary lists what changed.",
       "files": [
         "evals/files/regenerate-net10"
       ],
       "assertions": [
+        "The environment ID came from the app's own DeliveryOptions configuration, not from a guess or an unrelated sample environment",
         "Content/Generated/LegacyBanner.cs no longer exists after regeneration",
         "Content/Article.cs (the hand-written partial) is unchanged",
         "Article.cs regained the topics element that the checked-in copy was missing, both the TopicsCodename constant and the Topics property, which only a real regeneration produces",
