@@ -9,12 +9,12 @@ A repository-local manifest makes generation reproducible for the next person:
 ```bash
 dotnet new tool-manifest      # skip when .config/dotnet-tools.json already exists
 mkdir -p .config && mv dotnet-tools.json .config/   # the .NET 10 SDK writes it to the current directory
-dotnet tool install Kontent.Ai.ModelGenerator --prerelease
+dotnet tool install Kontent.Ai.ModelGenerator
 ```
 
-`--prerelease` picks the current 11.x line while it is a release candidate; it pairs with Delivery 20.x. Drop the flag once 11.x is stable, and pin 10.x explicitly for an app that stays on Delivery 19.x.
+Add `--prerelease` only while the 11.x line has no stable release yet. The generator's major follows the Delivery major whose models it emits, so 11.x pairs with Delivery 20.x; an older generator emits models for an older SDK and will not compile here.
 
-In an existing repository restore the manifest and keep its pinned version unless the user asked for an upgrade. The generator's major follows the Delivery major it emits models for, so check its README when the app is not on the current Delivery line.
+In an existing repository restore the manifest and keep its pinned version unless the user asked for an upgrade.
 
 Run from a directory where the manifest is in scope:
 

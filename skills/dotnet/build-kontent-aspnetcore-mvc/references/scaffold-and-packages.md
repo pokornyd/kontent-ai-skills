@@ -14,19 +14,15 @@ Prefer current primary sources and the actual target project over remembered sni
 
 ## Framework compatibility
 
-| Package line | Target framework |
-| --- | --- |
-| Kontent.Ai.Delivery 19.x, Kontent.Ai.AspNetCore 0.16.x, Kontent.Ai.ModelGenerator 10.x | `net8.0` (installs into newer frameworks) |
-| Kontent.Ai.Delivery 20.x, Kontent.Ai.AspNetCore 1.x, Kontent.Ai.ModelGenerator 11.x | `net10.0` only |
+One line, one framework: Kontent.Ai.Delivery 20.x, Kontent.Ai.AspNetCore 1.x and Kontent.Ai.ModelGenerator 11.x, all `net10.0` with no multi-targeting. `Kontent.Ai.Delivery.SourceGeneration` is `netstandard2.0` and follows the Delivery version rather than the framework. AspNetCore depends on Delivery, and the generator's major follows the Delivery major whose models it emits, so all three move together.
 
-The current line is the default even while it is a release candidate. A new app needs no version lookup: `--prerelease` on the add and install commands resolves the newest build. Look versions up (`dotnet package search <id> --exact-match --prerelease`) only when an existing app forces the older line. `Kontent.Ai.Delivery.SourceGeneration` is `netstandard2.0` and follows the Delivery version, not the framework. `Kontent.Ai.AspNetCore` depends on `Kontent.Ai.Delivery`, so its line fixes the Delivery line, and the model generator's major follows the Delivery major it emits models for. Pick all three from one line.
+A new app needs no version lookup: the add and install commands resolve the newest release on their own. The previous line, Delivery 19.x with AspNetCore 0.16.x and generator 10.x, targets `net8.0` and still exists on nuget.org, but this skill does not cover it. Its registration, ordering and error-handling APIs differ, so following these references against it produces code that does not compile.
 
-When the current line is incompatible with the target framework:
+When the target project is below `net10.0`, restore fails with `NU1202`. Do not resolve that by installing the older line or by retargeting the app. Report it:
 
-1. read NuGet's `NU1202` message for the supported frameworks;
-2. select the newest release of the previous line that supports the user's framework;
-3. offer a framework upgrade as a separate, explicit choice when it would materially improve the result;
-4. never resolve it by silently retargeting the app.
+1. name the constraint, quoting NuGet's message;
+2. say that the current Kontent.ai packages require `net10.0`, and that .NET 8 reaches end of support in November 2026, so the upgrade is the direction regardless;
+3. offer the framework upgrade as an explicit choice, and stop until the user makes it.
 
 ## New application
 
@@ -53,12 +49,12 @@ Preserve central package management: add `<PackageVersion>` entries there and no
 ## Package policy
 
 ```bash
-dotnet add <web-project> package Kontent.Ai.Delivery --prerelease
-dotnet add <models-project> package Kontent.Ai.Delivery.SourceGeneration --prerelease
-dotnet add <web-project> package Kontent.Ai.AspNetCore --prerelease
+dotnet add <web-project> package Kontent.Ai.Delivery
+dotnet add <models-project> package Kontent.Ai.Delivery.SourceGeneration
+dotnet add <web-project> package Kontent.Ai.AspNetCore
 ```
 
-`--prerelease` resolves the newest build of the current line while it is a release candidate; drop it once the line is stable. Under central package management add the same versions as `PackageVersion` entries instead.
+Add `--prerelease` to each only while the line has no stable release yet; `dotnet package search Kontent.Ai.Delivery --exact-match` answers that in one call, and the report should say which you used. Under central package management put the resolved versions in `Directory.Packages.props` as `PackageVersion` entries instead.
 
 Keep `Kontent.Ai.Delivery.SourceGeneration` at the same version as `Kontent.Ai.Delivery`; a plain `PackageReference` is enough, NuGet places it in the analyzers folder itself. `Kontent.Ai.Delivery.Caching`, `Kontent.Ai.Urls` or a direct `Kontent.Ai.Delivery.Abstractions` reference are added only when code needs them, not because a sample app lists them.
 
@@ -83,7 +79,7 @@ using Kontent.Ai.Delivery;
 builder.Services.AddDeliveryClient(delivery => delivery.Options.BindConfiguration("DeliveryOptions"));
 ```
 
-`delivery.Options` is an `OptionsBuilder<DeliveryOptions>`, so `Configure`, `Bind`, `BindConfiguration`, `PostConfigure` and `Validate` are all there, and `BindConfiguration` keeps `IOptionsMonitor` reloads working. The pipeline hangs off the same builder: `delivery.HttpClient` (an `IHttpClientBuilder`), `delivery.ConfigureResilience(...)`, and, when the user asks for caching, `delivery.UseMemoryCache(cache => ...)` from `Kontent.Ai.Delivery.Caching`. A named client is `AddDeliveryClient("preview", delivery => ...)`. The `using Kontent.Ai.Delivery;` line is required; implicit usings do not include it. On the 19.x line the equivalent is `AddDeliveryClient(builder.Configuration)`.
+`delivery.Options` is an `OptionsBuilder<DeliveryOptions>`, so `Configure`, `Bind`, `BindConfiguration`, `PostConfigure` and `Validate` are all there, and `BindConfiguration` keeps `IOptionsMonitor` reloads working. The pipeline hangs off the same builder: `delivery.HttpClient` (an `IHttpClientBuilder`), `delivery.ConfigureResilience(...)`, and, when the user asks for caching, `delivery.UseMemoryCache(cache => ...)` from `Kontent.Ai.Delivery.Caching`. A named client is `AddDeliveryClient("preview", delivery => ...)`. The `using Kontent.Ai.Delivery;` line is required; implicit usings do not include it.
 
 The environment ID may live in tracked configuration when the repository permits it. `PreviewApiKey` and `SecureAccessApiKey` go to user secrets in development and to environment variables such as `DeliveryOptions__SecureAccessApiKey` in deployment:
 

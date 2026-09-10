@@ -86,17 +86,16 @@
     {
       "id": 6,
       "prompt": "Add the latest Kontent.ai MVC integration to the Legacy.Web app in existing-net8, environment 8a80c10d-3530-016a-4222-675cc7ba3019. It's on net8.0 and we can't move it right now.",
-      "expected_output": "The agent keeps net8.0 and installs the newest stable net8.0-compatible releases (Delivery 19.x, AspNetCore 0.16.x) with a matching model generator, gets a green build, and explains the framework constraint and the upgrade path in the report.",
+      "expected_output": "The agent finds that the current Kontent.ai packages target net10.0 only, and stops rather than working around it: no Kontent.ai package or tool is installed, the app is not retargeted, and nothing is left half-integrated. The report names the incompatibility, says the previous 19.x line is not a supported path for this integration, notes that .NET 8 reaches end of support in November 2026, and puts the framework upgrade to the user as an explicit choice.",
       "files": [
         "evals/files/existing-net8"
       ],
       "assertions": [
-        "Legacy.Web.csproj still targets net8.0",
-        "No Kontent.ai package or tool uses a prerelease version, in the project file or in .config/dotnet-tools.json",
-        "The installed Kontent.ai packages restore successfully on net8.0 (no NU1202)",
-        "The report explains which package line was chosen and why, and names a framework upgrade as a separate choice if a newer line requires it",
-        "The solution builds with zero errors and zero warnings, verified by the grader building it rather than by the run's own report",
-        "Each Kontent.ai package and the model generator tool is the newest release that still targets net8.0, not merely some compatible older one"
+        "Legacy.Web.csproj still targets net8.0 and no target framework was changed anywhere",
+        "No Kontent.Ai.* PackageReference was added to any project file, and no .config/dotnet-tools.json was created",
+        "The report states that the current Kontent.ai packages require net10.0, citing the restore incompatibility rather than asserting it",
+        "The report puts the framework upgrade to the user as a decision instead of making it, and does not present Delivery 19.x as a supported fallback for this integration",
+        "The existing app is left in its original working state: the fixture still builds with zero errors and zero warnings, verified by the grader building it"
       ]
     },
     {
