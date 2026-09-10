@@ -60,11 +60,14 @@ There is no bundled runner; the cases are executed by an agent harness. The loop
 1. For each case, start two fresh agent sessions with the same prompt - one told to follow the
    skill, one told not to use it - each in its own empty directory, with any `evals/files/` fixture
    copied in. Isolation matters: a session that helped write the skill is not a fair test of it.
-2. Record each run's wall time and token count, which most harnesses report on completion.
-3. Grade each run's assertions against the files it produced, not against its own summary, recording
-   pass, fail and the evidence for each.
-4. Compare the two configurations. A case both configurations pass tells you nothing about the
-   skill; the informative cases are the ones they split on.
+2. Have each run write a step log next to its output as well as its final summary. A summary says
+   what the run produced; only the log says why it went wrong, which is what the next revision needs.
+3. Record each run's wall time and token count, which most harnesses report on completion.
+4. Grade each run's assertions against the files it produced, not against its own summary, recording
+   pass, fail and the evidence for each. Build and run the result where the assertions depend on it.
+5. Compare the two configurations. A case both configurations pass tells you nothing about the
+   skill; the informative cases are the ones they split on. Rewrite the assertions that neither
+   arm can fail, then note that doing so resets the pass-rate series.
 
 Results go in a sibling `<skill>-workspace/` folder, which is gitignored because a run leaves tens
 of megabytes of scaffolded projects behind. In Claude Code the `skill-creator` plugin automates

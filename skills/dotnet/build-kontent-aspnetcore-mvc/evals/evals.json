@@ -8,15 +8,15 @@
       "files": [],
       "assertions": [
         "A .config/dotnet-tools.json manifest pins Kontent.Ai.ModelGenerator",
-        "Generated model files carry the auto-generated header and a [ContentTypeCodename] attribute",
+        "All ten content types of the environment were generated (Article, BlogPost, CallToAction, Disclaimer, Event, LandingPage, Page, Person, Service, Video), each carrying the auto-generated header and a [ContentTypeCodename] attribute",
         "The web project references Kontent.Ai.Delivery, Kontent.Ai.Delivery.SourceGeneration and Kontent.Ai.AspNetCore from one package line (the current release-candidate line unless the user or framework forces the previous stable one)",
         "Program.cs registers the client with the builder callback form, AddDeliveryClient(delivery => delivery.Options.BindConfiguration(\"DeliveryOptions\")) or equivalent, not an IConfiguration or Action<DeliveryOptions> overload",
         "_ViewImports.cshtml contains @addTagHelper *, Kontent.Ai.AspNetCore",
         "Program.cs calls AddKontentRichText and binds ImageTransformationOptions, and appsettings.json has an ImageTransformationOptions section with ResponsiveWidths",
         "AGENTS.md exists at the root with a Kontent.ai section that states generated records are DTOs mapped to view models through mappers, names the generated directory and gives the regeneration command",
         "No controller, view or route was created for a content type",
-        "dotnet build completes with zero errors",
-        "No Preview or Secure Access API key appears in any file in the output"
+        "The solution builds with zero errors and zero warnings, verified by the grader building it rather than by the run's own report",
+        "The environment is public, so no key was invented: tracked configuration contains no PreviewApiKey or SecureAccessApiKey entry at all, not even an empty placeholder, and UseSecureAccess/UsePreviewApi are false"
       ]
     },
     {
@@ -32,9 +32,11 @@
         "No PackageReference in Acme.Web.csproj carries an inline Version attribute",
         "Generated models exist in a dedicated directory inside the web project and compile",
         "Program.cs registers the client with the builder callback form, AddDeliveryClient(delivery => delivery.Options.BindConfiguration(\"DeliveryOptions\")) or equivalent, not an IConfiguration or Action<DeliveryOptions> overload",
-        "dotnet build completes with zero errors",
-        "Files unrelated to the integration (HomeController.cs, existing views, wwwroot) are unchanged",
-        "No AGENTS.md or CLAUDE.md was created or edited in the existing solution; the report proposes the conventions section instead"
+        "The solution builds with zero errors and zero warnings, verified by the grader building it rather than by the run's own report",
+        "No controller, route, view model or content view was added, and the only pre-existing file edited besides the project and configuration files is _ViewImports.cshtml",
+        "No AGENTS.md or CLAUDE.md was created or edited in the existing solution; the report proposes the conventions section instead",
+        "Every Kontent.ai package resolves from one major line, and that line targets the project's framework",
+        "Files edited in the existing solution keep their original line endings and byte-order mark"
       ]
     },
     {
@@ -46,12 +48,12 @@
         "A service or similar class depends on IDeliveryClient and builds the Article queries; no IDeliveryResult, IDeliveryItemListingResponse or Pagination type escapes it, and no controller references IDeliveryClient",
         "A mapper per content type (IAsyncMapper or IMapper over IContentItem<T>) produces the view models, and the article view model exposes ItemId, IRichTextContent and IAsset",
         "The detail query passes the request CancellationToken to ExecuteAsync",
-        "A missing article (StatusCode NotFound) results in the controller returning NotFound(), while other failed results are logged or thrown rather than rendered as empty content",
+        "A slug that matches no article makes the controller return NotFound(), and a failed Delivery result is both logged and surfaced as an error rather than rendered as empty content",
         "The listing query uses GetItems<Article>() with element projection and OrderByElement via the generated codename constants",
         "The detail view renders the body with a rich-text tag helper rather than raw HTML output",
         "The article image asset is rendered with an img-asset tag helper",
         "No navigation menu, homepage composition or routes for content types other than Article were invented",
-        "dotnet build completes with zero errors",
+        "The solution builds with zero errors and zero warnings, verified by the grader building it rather than by the run's own report",
         "The rendered article detail page contains no missing-resolver HTML comment, so any component embedded in the body has a registered resolver"
       ]
     },
@@ -61,10 +63,11 @@
       "expected_output": "The agent explains that navigation, URL hierarchy and page composition cannot be derived from content-type names, inspects the environment enough to propose a bounded first slice (or asks which routable type to implement), and does not silently generate a site map, menu and routes for every content type.",
       "files": [],
       "assertions": [
-        "The response states that a full site cannot be inferred from the content model alone",
+        "The response names specific evidence from the environment for why the site cannot be inferred, such as content types without a URL slug or section pages with no link to the items they would list",
         "The agent either asks the user which content type to start with or recommends one specific bounded first slice",
         "No navigation menu or URL hierarchy spanning multiple content types was generated without confirmation",
-        "Any code that was produced compiles"
+        "A compiling Kontent.ai integration was still delivered: the packages are referenced, DeliveryOptions is bound, and the content types are generated",
+        "The solution builds with zero errors and zero warnings, verified by the grader building it rather than by the run's own report"
       ]
     },
     {
@@ -82,17 +85,18 @@
     },
     {
       "id": 6,
-      "prompt": "Add the latest Kontent.ai MVC integration to the Legacy.Web app in existing-net8. It's on net8.0 and we can't move it right now.",
+      "prompt": "Add the latest Kontent.ai MVC integration to the Legacy.Web app in existing-net8, environment 8a80c10d-3530-016a-4222-675cc7ba3019. It's on net8.0 and we can't move it right now.",
       "expected_output": "The agent keeps net8.0 and installs the newest stable net8.0-compatible releases (Delivery 19.x, AspNetCore 0.16.x) with a matching model generator, gets a green build, and explains the framework constraint and the upgrade path in the report.",
       "files": [
         "evals/files/existing-net8"
       ],
       "assertions": [
         "Legacy.Web.csproj still targets net8.0",
-        "No Kontent.ai package reference uses a prerelease version",
+        "No Kontent.ai package or tool uses a prerelease version, in the project file or in .config/dotnet-tools.json",
         "The installed Kontent.ai packages restore successfully on net8.0 (no NU1202)",
         "The report explains which package line was chosen and why, and names a framework upgrade as a separate choice if a newer line requires it",
-        "dotnet build completes with zero errors"
+        "The solution builds with zero errors and zero warnings, verified by the grader building it rather than by the run's own report",
+        "Each Kontent.ai package and the model generator tool is the newest release that still targets net8.0, not merely some compatible older one"
       ]
     },
     {
@@ -101,8 +105,8 @@
       "expected_output": "The agent recognises that this skill targets server-rendered MVC and does not apply the Razor recipe: no Razor views or tag helpers for content rendering, and a clear statement that the BFF/SPA architecture needs a different approach (it may still set up the Delivery client for an API project).",
       "files": [],
       "assertions": [
-        "The response states that this MVC skill does not fit a React plus BFF architecture",
-        "No Razor views, _ViewImports tag-helper registration or rich-text/img-asset markup were created for content rendering",
+        "The response states that server-rendered MVC with Razor is the wrong shape for this request and says where the presentation boundary goes instead",
+        "Rich text and assets are resolved server-side into the API contract rather than left as raw Delivery payloads for the client to interpret",
         "If any Delivery client registration was produced, it uses the builder callback form of AddDeliveryClient"
       ]
     },
@@ -116,11 +120,12 @@
       "assertions": [
         "Content/Generated/LegacyBanner.cs no longer exists after regeneration",
         "Content/Article.cs (the hand-written partial) is unchanged",
-        "Every file remaining in Content/Generated carries the auto-generated header",
+        "Article.cs regained the topics element that the checked-in copy was missing, both the TopicsCodename constant and the Topics property, which only a real regeneration produces",
         "The tool manifest's pinned Kontent.Ai.ModelGenerator version was used, not a global install or a different version",
         "The report lists the content types that were removed or renamed",
-        "dotnet build completes with zero errors",
-        "The regeneration was performed by running the pinned tool, not by deleting the stale file by hand: the report names the temporary output directory it diffed against"
+        "The solution builds with zero errors and zero warnings, verified by the grader building it rather than by the run's own report",
+        "The regeneration was performed by running the pinned tool, not by deleting the stale file by hand: the report names the temporary output directory it diffed against",
+        "Every file remaining in Content/Generated carries the auto-generated header, and nothing outside that directory changed"
       ]
     }
   ]

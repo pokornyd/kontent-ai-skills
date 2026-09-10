@@ -32,7 +32,6 @@ public partial record Article
     public const string PublishDateCodename = "publish_date";
     public const string RelatedArticlesCodename = "related_articles";
     public const string TitleCodename = "title";
-    public const string TopicsCodename = "topics";
     public const string UrlSlugCodename = "url_slug";
     public const string ContentTypeCodename = "article";
 
@@ -58,8 +57,6 @@ public partial record Article
     public IEnumerable<IEmbeddedContent>? RelatedArticles { get; init; }
     [JsonPropertyName("title")]
     public string? Title { get; init; }
-    [JsonPropertyName("topics")]
-    public IEnumerable<TaxonomyTerm>? Topics { get; init; }
     [JsonPropertyName("url_slug")]
     public string? UrlSlug { get; init; }
 }

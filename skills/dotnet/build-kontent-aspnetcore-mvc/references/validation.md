@@ -10,6 +10,7 @@ Validation proves the scaffold is reproducible and integrated, not that files ex
 4. `dotnet build --no-restore` for the affected solution or projects, with warnings visible.
 5. Existing tests, format and lint checks, and repository-specific validation when present.
 6. `git diff --check` and `git status --short`: no secrets, build output, framework upgrades or unrelated edits.
+7. `git diff --stat` on an existing project: a file showing far more changed lines than you edited means its line endings or byte-order mark were rewritten; restore them.
 
 Run `dotnet test --no-build` only when the preceding build included the test project. A compile-only check says nothing about Delivery connectivity; report it as a compile check.
 
