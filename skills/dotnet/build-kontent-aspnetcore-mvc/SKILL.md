@@ -21,7 +21,7 @@ Work through the steps in order; each later step assumes the earlier one compile
 - [ ] 3. Scaffold or integrate - read `references/scaffold-and-packages.md`
 - [ ] 4. Generate models - read `references/model-generation.md`
 - [ ] 5. Wire Razor rendering and leave the conventions in the repo - read `references/razor-rendering.md`
-- [ ] 6. Build a content slice only when asked - read `references/content-presentation.md`
+- [ ] 6. Build a content slice only when asked - read `references/content-presentation.md`, and `references/localization.md` when the environment has more than one language
 - [ ] 7. Validate and report - read `references/validation.md`
 
 Read the [Gotchas](#gotchas) before step 3. They are the facts most likely to be wrong in memory.
@@ -48,6 +48,7 @@ Determine:
 
 - new app or existing MVC project, and which project or solution is the target;
 - the environment ID and, when the environment is protected, that the key variable is present (`test -n "$KONTENT_SECURE_ACCESS_KEY"` reports presence without printing it);
+- how many languages the environment has (`/languages` on the Delivery API), because more than one changes the shape of every query and every route;
 - plumbing only (packages, configuration, models) or a working content slice for a named content type;
 - any explicitly requested .NET or package versions.
 
@@ -123,6 +124,7 @@ Report the environment from what it actually returned, not from what its ID rese
 - **Editing an existing project preserves its bytes.** A .NET template writes CRLF line endings and gives `_ViewImports.cshtml` a UTF-8 byte-order mark. Rewriting a file wholesale flattens both, so a one-line change lands as a whole-file diff and reviewers cannot see what you did. Edit in place rather than regenerating a file, and check `git diff --stat` for files that grew far more changed lines than you touched.
 - **On the .NET 10 SDK `dotnet new tool-manifest` writes `dotnet-tools.json` into the current directory**, not `.config/`. Move it (`mkdir -p .config && mv dotnet-tools.json .config/`) before installing the tool, so the manifest sits where every other SDK and every reader expects it.
 - **Generated files are `partial record`s and are overwritten on regeneration.** Extend a model in a separate partial file in the same namespace outside the generated directory; never edit generated files.
+- **A query without a language silently serves the environment's default.** There is no global setting to change that, so in a multilingual environment a forgotten parameter looks exactly like success. Read `references/localization.md` before writing the first query.
 - **Typed queries filter by type for you.** `GetItems<Article>()` adds `system.type=article` from `[ContentTypeCodename]`. Use the generated `<Element>Codename` constants (`Article.TitleCodename`) in `WithElements`, `Where` and `OrderByElement(Article.PublishDateCodename, OrderingMode.Descending)` instead of retyped strings; `OrderByElement` and `OrderBySystem` (rc.3) add the `elements.`/`system.` prefix, `OrderBy` still wants the full path.
 - **Failures are results; cancellation throws.** `ExecuteAsync(cancellationToken)` returns `IDeliveryResult<T>`: a missing item is `IsSuccess == false` with `StatusCode == NotFound`; a transport failure has `StatusCode == 0` and `Error.Exception`. Only `OperationCanceledException` is thrown from a single request, so a `catch (HttpRequestException)` around `ExecuteAsync` is dead code. The one place that throws is a walk: `EnumerateAsync()` on the feed and used-in queries raises `DeliveryRequestException` on a failed page (rc.3) instead of ending early, so an export cannot mistake a partial result for a complete one.
 - **`<rich-text>` renders the resolver output in place**, with no wrapper element. Without `AddKontentRichText` it still renders text and inline images, and emits HTML comments where embedded content and content-item links have no resolver, so those need explicit configuration before they appear.
