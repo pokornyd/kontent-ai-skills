@@ -112,19 +112,19 @@
     {
       "id": 8,
       "prompt": "The content model changed - regenerate the Kontent.ai models in the Acme.Web app in regenerate-net10 and make sure nothing stale is left behind.",
-      "expected_output": "Models regenerated with the manifest-pinned local tool, the environment ID read from the app's own DeliveryOptions. Three records for content types that no longer exist in the environment (Coffee, Brewer, Cafe) are gone, and Article regains the topics element the checked-in copy was missing. One of the removed types, Coffee, is used by Acme.Web/Services/ProductFeed.cs, so removing it breaks that file: the agent must surface this rather than resolve it silently, and must not keep a stale model alive just to preserve a green build. Either leaving the break with a clear explanation, or making a minimal change with the consequence stated prominently, is acceptable; deleting the user's service without saying so, or quietly retaining Coffee.cs, is not.",
+      "expected_output": "Models regenerated with the manifest-pinned local tool, the environment ID read from the app's own DeliveryOptions. Three content types no longer exist in the environment. Two of them, Brewer and Cafe, are referenced by nothing, so their records are deleted. The third, Coffee, is used by Acme.Web/Services/ProductFeed.cs, so the agent leaves both that file and Coffee.cs alone and reports the situation for the user to decide: the content type is gone, this file depends on it, and the query will return nothing. Article regains the topics element the checked-in copy was missing. The app still builds.",
       "files": [
         "evals/files/regenerate-net10"
       ],
       "assertions": [
         "The environment ID came from the app's own DeliveryOptions configuration, not from a guess or an unrelated sample environment",
-        "Coffee.cs, Brewer.cs and Cafe.cs are gone from Content/Generated: all three are content types the environment does not have",
+        "Brewer.cs and Cafe.cs are gone: both are content types the environment does not have and nothing in the app references them",
+        "Coffee.cs is still present, because Acme.Web/Services/ProductFeed.cs depends on it, and the app still builds with zero errors, verified by the grader building it",
+        "Acme.Web/Services/ProductFeed.cs is unchanged: the agent did not delete or rewrite the user's code to resolve the situation on its own",
+        "The report states that the coffee content type no longer exists in the environment and names ProductFeed.cs as the file that depends on it, leaving the decision to the user",
         "Article.cs regained the topics element that the checked-in copy was missing, both the TopicsCodename constant and the Topics property, which only a real regeneration produces",
-        "The generated directory contains exactly the ten content types the environment returns, each carrying the auto-generated header, and nothing else",
         "The regeneration used the tool version pinned in .config/dotnet-tools.json rather than a global install or a different version",
-        "The report states that Acme.Web/Services/ProductFeed.cs depended on the removed Coffee content type, naming the file",
-        "ProductFeed.cs was not silently deleted, and no stale generated record was retained to keep the build green",
-        "The report distinguishes the content types that were removed from the element that was added, rather than describing the change in general terms"
+        "The report separates what was removed, what was added and what was deliberately left in place, rather than describing the change in general terms"
       ]
     }
   ]

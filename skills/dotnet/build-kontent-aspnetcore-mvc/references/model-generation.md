@@ -62,7 +62,14 @@ Generate into a dedicated directory such as `Content/Generated`. Each file carri
 
 ## Regeneration in an existing project
 
-Generate into a temporary directory first and diff it against the generated directory. When that directory contains only generated files, replace it wholesale so removed or renamed content types disappear instead of lingering as stale records that no longer match the environment. When hand-written files were mixed in, move them out first rather than deleting around them. Rebuild, then list renamed and removed types in the summary: partial extensions of a removed type stop compiling, and the user needs to know why.
+Generate into a temporary directory first and diff it against the generated directory. The generator writes a file per type that currently exists and never deletes one, so a type removed from the environment lingers as a record that still compiles and still registers with the source generator. Nothing announces it.
+
+Before removing anything, search the app for each type that disappeared. What you do next depends on what you find, and the split matters:
+
+- **Nothing references it.** Delete it. It is dead weight, removing it is what "nothing stale" means, and there is no way for that to surprise anyone.
+- **Something references it.** Stop and tell the user. Name the content type and every file that uses it, and leave both the code and the generated record in place. Deleting the record breaks their build; deleting the code they wrote destroys work; keeping quiet leaves them querying a content type that no longer exists and getting empty results forever. Which of those to do is a product decision, and a deleted type is often an accident or a migration in progress, so it is not yours to make. Say what you found and let them choose.
+
+Rebuild after the removals you did make, and list in the summary what was removed, what was added, and any type you left in place along with the reason.
 
 ## Verify the result
 
