@@ -31,4 +31,12 @@ Run `dotnet test --no-build` only when the preceding build included the test pro
 
 For a plumbing-only task, model generation is already the connectivity proof: it authenticated as far as the environment requires, fetched the content types over the network and wrote a file per type. Say that, rather than leaving the report silent on whether Delivery was ever reached. Starting the app adds nothing beyond it, because with no route querying content the homepage exercises no Delivery call, so skip it. When the task includes a functional slice and environment access is available, start the app with `dotnet run --no-launch-profile --urls http://127.0.0.1:<port>` (without `--no-launch-profile`, `launchSettings.json` overrides the URL), request the implemented route, check both the response and the logs, and stop the process afterwards. A default MVC homepage proves startup, not Delivery connectivity, so say which one was tested.
 
+If the page loads but arrives unstyled, check the template's static-asset pipeline before suspecting your own markup. On some .NET 10 SDK builds `MapStaticAssets` answers a compressed request with a 200 and an empty body, so every browser gets a zero-byte stylesheet. One command tells you:
+
+```bash
+curl -s -H 'Accept-Encoding: gzip' -o /dev/null -w '%{size_download}\n' http://127.0.0.1:<port>/css/site.css
+```
+
+Zero bytes there and a correct size without the header is the bug. Confirm it on a throwaway `dotnet new mvc` before changing anything, since that separates an SDK defect from something you wrote; then replace `app.MapStaticAssets()` with `app.UseStaticFiles()`, note in the report that it is an SDK workaround rather than a preference, and leave a comment saying why. Do not carry the workaround into a project where the check passes: this will be fixed in a later SDK, and by then swapping the call is a downgrade.
+
 If Secure Access, network policy or missing content blocks the runtime check, report the blocker and leave the build green. Hardcoded sample content standing in for a failed Delivery request hides the failure from the user; never substitute it.
