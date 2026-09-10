@@ -112,20 +112,19 @@
     {
       "id": 8,
       "prompt": "The content model changed - regenerate the Kontent.ai models in the Acme.Web app in regenerate-net10 and make sure nothing stale is left behind.",
-      "expected_output": "Models regenerated with the manifest-pinned local tool into a temporary directory and diffed against Content/Generated; the environment ID read from the app's own DeliveryOptions rather than guessed; the stale LegacyBanner.cs removed and the topics element restored on Article; the hand-written partial Content/Article.cs preserved; the project rebuilds; and the summary lists what changed.",
+      "expected_output": "Models regenerated with the manifest-pinned local tool, the environment ID read from the app's own DeliveryOptions. Three records for content types that no longer exist in the environment (Coffee, Brewer, Cafe) are gone, and Article regains the topics element the checked-in copy was missing. One of the removed types, Coffee, is used by Acme.Web/Services/ProductFeed.cs, so removing it breaks that file: the agent must surface this rather than resolve it silently, and must not keep a stale model alive just to preserve a green build. Either leaving the break with a clear explanation, or making a minimal change with the consequence stated prominently, is acceptable; deleting the user's service without saying so, or quietly retaining Coffee.cs, is not.",
       "files": [
         "evals/files/regenerate-net10"
       ],
       "assertions": [
         "The environment ID came from the app's own DeliveryOptions configuration, not from a guess or an unrelated sample environment",
-        "Content/Generated/LegacyBanner.cs no longer exists after regeneration",
-        "Content/Article.cs (the hand-written partial) is unchanged",
+        "Coffee.cs, Brewer.cs and Cafe.cs are gone from Content/Generated: all three are content types the environment does not have",
         "Article.cs regained the topics element that the checked-in copy was missing, both the TopicsCodename constant and the Topics property, which only a real regeneration produces",
-        "The tool manifest's pinned Kontent.Ai.ModelGenerator version was used, not a global install or a different version",
-        "The report lists the content types that were removed or renamed",
-        "The solution builds with zero errors and zero warnings, verified by the grader building it rather than by the run's own report",
-        "The regeneration was performed by running the pinned tool, not by deleting the stale file by hand: the report names the temporary output directory it diffed against",
-        "Every file remaining in Content/Generated carries the auto-generated header, and nothing outside that directory changed"
+        "The generated directory contains exactly the ten content types the environment returns, each carrying the auto-generated header, and nothing else",
+        "The regeneration used the tool version pinned in .config/dotnet-tools.json rather than a global install or a different version",
+        "The report states that Acme.Web/Services/ProductFeed.cs depended on the removed Coffee content type, naming the file",
+        "ProductFeed.cs was not silently deleted, and no stale generated record was retained to keep the build green",
+        "The report distinguishes the content types that were removed from the element that was added, rather than describing the change in general terms"
       ]
     }
   ]
