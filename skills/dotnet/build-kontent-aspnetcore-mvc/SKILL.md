@@ -103,6 +103,7 @@ Follow `references/validation.md`: restore tools and packages, regenerate with t
 ```markdown
 ## Kontent.ai MVC integration
 
+- Environment: <id>, which returned <n> content types (<the codenames, or the first few and a count>)
 - Target framework: <tfm>; packages: Kontent.Ai.Delivery <v>, .SourceGeneration <v>, Kontent.Ai.AspNetCore <v>; tool: Kontent.Ai.ModelGenerator <v>
 - Configuration: DeliveryOptions bound from <source>; still needed from you: <keys, or nothing>
 - Models: <namespace> in <directory>; regenerate with `<command>`
@@ -110,6 +111,8 @@ Follow `references/validation.md`: restore tools and packages, regenerate with t
 - Validation: <what ran and passed>; blockers: <none, or list>
 - Next step: <the first slice you would build and why, or the conventions proposal for an existing app>
 ```
+
+Report the environment from what it actually returned, not from what its ID resembles. Kontent.ai publishes sample environments and their IDs circulate in documentation, so naming one from memory is how a report ends up confidently describing the wrong content model. The codenames the generator just fetched are the evidence.
 
 ## Gotchas
 
