@@ -12,9 +12,9 @@ mkdir -p .config && mv dotnet-tools.json .config/   # the .NET 10 SDK writes it 
 dotnet tool install Kontent.Ai.ModelGenerator
 ```
 
-Add `--prerelease` only while the 11.x line has no stable release yet. The generator's major follows the Delivery major whose models it emits, so 11.x pairs with Delivery 20.x; an older generator emits models for an older SDK and will not compile here.
+No `--prerelease`; 11.x is stable. The tool needs the .NET 10 runtime, which is the only thing tying it to this package line: its Delivery output is unchanged from 10.x, so regenerating with a newer tool produces no diff by itself, and the project's own target framework is constrained by the SDK the models reference, not by the tool.
 
-In an existing repository restore the manifest and keep its pinned version unless the user asked for an upgrade.
+In an existing repository restore the manifest and keep its pinned version unless the user asked for an upgrade. When that pin is below 11.0.1, including any `11.0.0-rc`, say so in the report and recommend the bump: those builds exit 0 with nothing written when the Delivery request fails (see below), which is the failure a regeneration pipeline can least afford.
 
 Run from a directory where the manifest is in scope:
 
@@ -26,7 +26,19 @@ dotnet tool run KontentModelGenerator \
   --nullability strict
 ```
 
-Delivery mode is the default; `--management` emits Management SDK models, which an MVC site does not need. `--outputdir` is resolved against the working directory, so pass an absolute path or one relative to where the command runs.
+Delivery mode is the default; `--management` emits Management SDK models, which an MVC site does not need. `--outputdir` is resolved against the working directory, so pass an absolute path or one relative to where the command runs. Arguments are validated before any request, so a malformed `--environmentId` or a flag belonging to the other mode fails immediately instead of part-way through a run.
+
+### When generation fails
+
+From 11.0.1 a failed Delivery call aborts the run with exit code 1 and the API's own diagnosis:
+
+```text
+Failed to list content types from the Delivery API (404): The specified environment with the ID '<environment-id>' doesn't exist. Check for the correct environment ID in Kontent.ai > Environment settings > General. … Request ID: df98da3777b89689.
+```
+
+Read the status before retrying. A 404 is a wrong environment ID. A 401 means the environment has Secure Access on, or the key was rejected; the message for it says to check `--apikey`, which is misleading in Delivery mode, because `--apikey` is the Management API key and is refused without `--management`. The key belongs in `--DeliveryOptions:SecureAccessApiKey` as shown under Protected environments. Do not add `--management` to make the flag acceptable: that generates Management models over the output directory.
+
+Older builds report the same failures as "No content type available for the environment", write nothing and exit 0. With such a pin, zero generated files means the request failed; `curl -s -o /dev/null -w '%{http_code}\n' https://deliver.kontent.ai/<environment-id>/types` tells you which way.
 
 ### Nullability
 
@@ -70,6 +82,8 @@ Before removing anything, search the app for each type that disappeared. What yo
 - **Something references it.** Stop and tell the user. Name the content type and every file that uses it, and leave both the code and the generated record in place. Deleting the record breaks their build; deleting the code they wrote destroys work; keeping quiet leaves them querying a content type that no longer exists and getting empty results forever. Which of those to do is a product decision, and a deleted type is often an accident or a migration in progress, so it is not yours to make. Say what you found and let them choose.
 
 Rebuild after the removals you did make, and list in the summary what was removed, what was added, and any type you left in place along with the reason.
+
+The opposite drift, a type added to the environment since the last generation, never breaks a build either. At runtime the SDK falls back to `IDynamicElements` for it and logs warning `1408` (`Content type '<codename>' has no mapped model`) once per type, so when the user reports linked items or components missing from a page, that warning in the app's log is the evidence that regeneration is the fix.
 
 ## Verify the result
 
