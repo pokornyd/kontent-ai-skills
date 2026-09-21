@@ -64,13 +64,14 @@
     {
       "id": 4,
       "prompt": "Build the whole website represented by this Kontent.ai environment: 8a80c10d-3530-016a-4222-675cc7ba3019.",
-      "expected_output": "The agent explains that navigation, URL hierarchy and page composition cannot be derived from content-type names, inspects the environment enough to propose a bounded first slice (or asks which routable type to implement), and does not silently generate a site map, menu and routes for every content type.",
+      "expected_output": "This case guards the skill's scope boundary; it is not a fair comparison against an agent without the skill, which has no such boundary and may reasonably build the site. The agent delivers the compiling starter (packages, DeliveryOptions bound, all content types generated, conventions file) and stops there or at one bounded slice. It does not build cross-type navigation or routes. Its report hands over what the content inspection found for whoever builds the site: that the landing page's subpages element carries a four-item menu, that the four page items have empty bodies and nothing links them to the items they would list, which types have a URL slug and which do not, and what the rich text embeds. It says that building the whole site is beyond this integration and recommends the first slice, without claiming the structure is underivable.",
       "files": [],
       "assertions": [
-        "The response names specific evidence from the environment for why the site cannot be inferred, such as content types without a URL slug or section pages with no link to the items they would list",
-        "The agent either asks the user which content type to start with or recommends one specific bounded first slice",
-        "No navigation menu or URL hierarchy spanning multiple content types was generated without confirmation",
-        "A compiling Kontent.ai integration was still delivered: the packages are referenced, DeliveryOptions is bound, and the content types are generated",
+        "A compiling Kontent.ai starter was delivered: the packages are referenced, DeliveryOptions is bound with the requested environment ID, and all ten content types are generated",
+        "At most one content slice was built: there are no controllers, routes or views for more than one routable content type, and no navigation menu generated from content",
+        "The report names the content element that carries the site's navigation (the landing page's subpages) and states that the four page items it points at have empty bodies or no link to the items they would list",
+        "The report states which content types have a URL slug element and which do not",
+        "The report says that building the whole site goes beyond what was delivered and recommends one specific first slice, without asserting that the site's structure cannot be derived from the environment",
         "The solution builds with zero errors and zero warnings, verified by the grader building it rather than by the run's own report"
       ]
     },
@@ -107,11 +108,13 @@
     {
       "id": 7,
       "prompt": "Create a React frontend with an ASP.NET Core BFF that reads content from Kontent.ai environment 8a80c10d-3530-016a-4222-675cc7ba3019.",
-      "expected_output": "The agent recognises that this skill targets server-rendered MVC and does not apply the Razor recipe: no Razor views or tag helpers for content rendering, and a clear statement that the BFF/SPA architecture needs a different approach (it may still set up the Delivery client for an API project).",
+      "expected_output": "A BFF that owns every Kontent.ai call and a React frontend that consumes its contract. No Razor views or tag helpers render content. Rich text is resolved on the server, including the embedded disclaimer component in the article patient-care-innovation, and assets arrive as ready-to-use URLs. Every Delivery query names its language, and a language codename supplied by the client is validated against the environment, because an unknown codename makes the Delivery API answer 200 with zero items. When the agent was handed the MVC skill, its report says which parts of that skill it applied and which it set aside; that is recorded as an observation, not asserted, because an agent without the skill has no reason to raise it.",
       "files": [],
       "assertions": [
-        "The response states that server-rendered MVC with Razor is the wrong shape for this request and says where the presentation boundary goes instead",
-        "Rich text and assets are resolved server-side into the API contract rather than left as raw Delivery payloads for the client to interpret",
+        "No Razor view, tag helper or MVC controller renders Kontent.ai content: content reaches the browser only through the API contract",
+        "Rich text is resolved server-side into the API contract rather than left as a raw Delivery payload: the detail payload of the article with slug patient-care-innovation contains the text of its embedded disclaimer component and no 'Missing resolver' comment, verified by the grader requesting it from the running API",
+        "Assets are delivered in the API contract as ready-to-use absolute URLs",
+        "A language codename supplied by the client that does not exist in the environment is rejected with a 4xx response rather than answered with an empty 200, verified by the grader requesting it",
         "If any Delivery client registration was produced, it uses the builder callback form of AddDeliveryClient"
       ]
     },
@@ -155,6 +158,28 @@
         "No rendered page contains an empty href attribute, verified across the listing and one detail page in both languages",
         "Every Kontent.ai package and the ModelGenerator tool resolved to a stable version with no prerelease suffix, and Program.cs registers the client with the builder callback form of AddDeliveryClient",
         "The solution builds with zero errors and zero warnings, verified by the grader building it rather than by the run's own report"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Set up a Kontent.ai MVC site for environment 8a80c10d-3530-016a-4222-675cc7ba3019 where the home page is our University Landing page (the landing_page item). Show its headline, subheadline, hero image and the body.",
+      "expected_output": "A home page at / driven by the university_landing item. Its body_copy rich text is made entirely of components that the generated models give no hint of: two call_to_action components, one disclaimer and one video. The agent discovers them from the content, registers a typed resolver for each through AddKontentRichText, encodes every editor-controlled value including the video embed URL, and renders the body through the rich-text tag helper so that all four components are visible and no missing-resolver comment is left. Each call to action's button links to a page item; the button either leads somewhere the app really serves or is rendered without an anchor, never to an empty or placeholder href. Hero image through img-asset with alt text although the asset description is empty; content service and view model between Delivery and the view; explicit language on the query; stable packages; green build.",
+      "files": [],
+      "assertions": [
+        "GET / returns 200 and the rendered page contains the landing page's headline 'Leading the Future of Medicine and Research' and its subheadline, verified by the grader running the app",
+        "The rendered home page contains no missing-resolver HTML comment from the Kontent.ai SDK",
+        "All four components of the body are visible in the rendered home page: the call to action headlines 'Our Team' and 'Our Research', the disclaimer headline that begins 'We' and ends 'Always Evolving.', and the video, as an embedded player or a link carrying its headline or caption",
+        "Program.cs registers resolvers through AddKontentRichText for the CallToAction, Disclaimer and Video generated types using typed access to their elements, rather than parsing the rich text HTML or bypassing the resolver pipeline",
+        "The body is rendered with the rich-text tag helper rather than as a raw HTML string",
+        "Every element value that a resolver interpolates into HTML passes through an HTML encoder, in element content and in attributes alike",
+        "The video's editor-supplied URL reaches an iframe or anchor only after validation as an absolute https URL (a host allow-list also satisfies this); a blank check alone does not",
+        "Every button or link rendered from a call to action either leads to a route the app actually serves, verified by the grader requesting it and not receiving 404, or is rendered without an anchor; none has an empty href or a '#' placeholder",
+        "The hero image is rendered through the img-asset tag helper with a non-empty alt attribute in the rendered HTML, although the asset's description in this environment is empty",
+        "A content service or equivalent class owns the Delivery query, no controller references IDeliveryClient, and the view receives a view model rather than the generated LandingPage record",
+        "The Delivery query names its language explicitly with WithLanguage",
+        "Every Kontent.ai package and the ModelGenerator tool resolved to a stable version with no prerelease suffix, and Program.cs registers the client with the builder callback form of AddDeliveryClient",
+        "The solution builds with zero errors and zero warnings, verified by the grader building it rather than by the run's own report",
+        "The site's stylesheet is served with a non-empty body to a request that sends 'Accept-Encoding: gzip', verified by the grader requesting /css/site.css (or the stylesheet the layout links) from the running app, so the page is styled in a real browser"
       ]
     }
   ]
