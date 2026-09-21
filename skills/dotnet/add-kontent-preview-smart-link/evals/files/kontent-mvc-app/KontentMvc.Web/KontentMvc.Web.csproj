@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Kontent.Ai.AspNetCore" Version="1.0.0" />
+    <PackageReference Include="Kontent.Ai.Delivery" Version="20.0.1" />
+    <PackageReference Include="Kontent.Ai.Delivery.SourceGeneration" Version="20.0.1" />
+  </ItemGroup>
+
+</Project>

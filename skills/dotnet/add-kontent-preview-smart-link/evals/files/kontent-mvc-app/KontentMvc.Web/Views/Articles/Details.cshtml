@@ -1,0 +1,41 @@
+@model ArticleViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<article class="article">
+    <h1>@Model.Title</h1>
+
+    <p class="text-muted">
+        @if (Model.PublishedOn is { } publishedOn)
+        {
+            <time datetime="@publishedOn.ToString("yyyy-MM-dd")">@publishedOn.ToString("d MMMM yyyy")</time>
+        }
+        @if (Model.Author is { } author)
+        {
+            <span>&nbsp;by @author.Name@(string.IsNullOrWhiteSpace(author.JobTitle) ? string.Empty : $", {author.JobTitle}")</span>
+        }
+    </p>
+
+    @* <img-asset> builds srcset/sizes from ImageTransformationOptions:ResponsiveWidths;
+       <media-condition> maps viewport ranges to the width the browser should pick. *@
+    <img-asset asset="@Model.Image"
+               title="@Model.ImageAltText"
+               default-width="1024"
+               class="img-fluid mb-4">
+        <media-condition max-width="576" image-width="480" />
+        <media-condition max-width="992" image-width="768" />
+    </img-asset>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Summary))
+    {
+        <p class="lead">@Model.Summary</p>
+    }
+
+    @* The resolver output replaces this element; null content renders nothing, so no guard. *@
+    <rich-text content="@Model.Body" />
+</article>
+
+<p class="mt-4">
+    <a asp-route="ArticleListing">Back to all articles</a>
+</p>
