@@ -27,7 +27,23 @@ Keep `IRichTextContent` on the view model and let Razor resolve it:
 <rich-text content="@Model.Body" />
 ```
 
-The resolver output replaces the element; there is no `<rich-text>` wrapper in the page, and a `null` content renders nothing, so no guard is needed. The default resolver encodes text nodes and renders inline images. Embedded content and content-item links render as HTML comments until a resolver is configured, so when the generated models contain them, configure the builder with the real types and routes:
+The resolver output replaces the element; there is no `<rich-text>` wrapper in the page, and a `null` content renders nothing, so no guard is needed. The default resolver encodes text nodes and renders inline images. An embedded component, a linked item or a content-item link has no sensible default, because only the application knows the markup or the URL, so the SDK reports it instead of dropping it silently:
+
+```html
+<!-- [Kontent.ai SDK] Missing resolver for embedded content of type "disclaimer" (item: …, codename: …) -->
+```
+
+That comment is the intended behaviour and the signal to act on: the page still renders, and the editor's component is missing from it.
+
+### Find out what the rich text contains before wiring it
+
+The generated models cannot tell you. A rich-text property is `RichTextContent?` whatever editors put inside it, so a component used in one article out of fifty is invisible in the code and in any page you happen to open. Ask the content, for every content type the slice renders rich text from, nested types included:
+
+```bash
+python3 <skill-dir>/scripts/rich_text_inventory.py <environment-id> <content-type-codename>
+```
+
+It lists the types embedded in that type's rich text, the types its content-item links point at, and the items they occur in. Without Python, the same facts are in the Delivery response: each rich-text element carries `modular_content` (codenames whose `system.type` is in the response's top-level `modular_content`) and `links` (each with a `type`). Register a resolver for every type it reports, with the real generated types and the app's real routes:
 
 ```csharp
 builder.Services.AddKontentRichText(resolvers => resolvers
@@ -35,13 +51,17 @@ builder.Services.AddKontentRichText(resolvers => resolvers
         $"<blockquote>{HtmlEncoder.Default.Encode(quote.Elements.Text ?? string.Empty)}</blockquote>")
     .WithContentItemLinkResolver("article", async (link, resolveChildren) =>
     {
-        var slug = link.Metadata?.UrlSlug ?? link.ItemId.ToString();
-        var inner = await resolveChildren(link.Children);
+        var slug = HtmlEncoder.Default.Encode(link.Metadata?.UrlSlug ?? link.ItemId.ToString());
+        var inner = await resolveChildren(link.Children);   // already HTML; encoding it again would escape the markup
         return $"<a href=\"/articles/{slug}\">{inner}</a>";
     }));
 ```
 
-A link resolver renders the **whole** anchor, not its opening tag: there is no `link.Text`, so the authored link text and its inline formatting come from `await resolveChildren(link.Children)`, and returning only `<a href=...>` produces an unclosed, empty anchor. Encode every editor-controlled value that lands in handcrafted HTML. When link targets need routing services, use the overload that exposes `IServiceProvider` and resolve only singleton-safe dependencies, because the resolver is built once per application, not per request. For partial views or an explicit cancellation token there is `@await Model.Body.ToHtmlContentAsync(Resolver, ViewContext.HttpContext.RequestAborted)`, but pass the resolver explicitly (`@inject IHtmlResolver Resolver`): an extension method cannot reach the container, so without one it uses the SDK's built-in defaults, not what `AddKontentRichText` registered. Only the tag helper picks that up on its own.
+A type that has no page of its own still needs a link resolver if editors link to it; render the link text without an anchor rather than inventing a route. When an unhandled type should fail loudly instead of leaving a comment, which suits a development environment or a test, add `.ThrowOnMissingResolver()` to the builder.
+
+Then prove it on the pages the inventory named, not on whichever item is first: request each one and search the HTML for `Missing resolver`. A smoke test of an item with plain rich text passes whether or not the resolvers exist.
+
+A link resolver renders the **whole** anchor, not its opening tag: there is no `link.Text`, so the authored link text and its inline formatting come from `await resolveChildren(link.Children)`, and returning only `<a href=...>` produces an unclosed, empty anchor. A resolver's return value is inserted unescaped, so encode every editor-controlled value that lands in handcrafted HTML, the slug included (`HtmlEncoder` is in `System.Text.Encodings.Web`), and leave the output of `resolveChildren` alone. When link targets need routing services, use the overload that exposes `IServiceProvider` and resolve only singleton-safe dependencies, because the resolver is built once per application, not per request. For partial views or an explicit cancellation token there is `@await Model.Body.ToHtmlContentAsync(Resolver, ViewContext.HttpContext.RequestAborted)`, but pass the resolver explicitly (`@inject IHtmlResolver Resolver`): an extension method cannot reach the container, so without one it uses the SDK's built-in defaults, not what `AddKontentRichText` registered. Only the tag helper picks that up on its own.
 
 ## Assets
 

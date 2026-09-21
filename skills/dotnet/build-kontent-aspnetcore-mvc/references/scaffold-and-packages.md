@@ -6,7 +6,8 @@ Read before scaffolding a new MVC project or changing package references.
 
 Prefer current primary sources and the actual target project over remembered snippets. Repository `main` can describe an unreleased version, so use it for API shape and NuGet for versions:
 
-- Delivery SDK: https://github.com/kontent-ai/dotnet/blob/main/src/delivery/README.md, plus `docs/upgrade/` for the current major
+- Delivery SDK: https://github.com/kontent-ai/dotnet/blob/main/src/delivery/README.md covers installation, registration and configuration only. Querying, models and rich text moved to guides beside it: `docs/queries.md`, `docs/models.md` and `docs/rich-text-customization.md`, with `docs/upgrade/19-to-20.md` for anything a 19.x sample does differently
+- Each package's `CHANGELOG.md` (`src/delivery/`, `src/aspnetcore/`, `src/model-generator/`) for what a patch release changed; behaviour fixes land there before they reach a guide
 - ASP.NET Core extensions: https://github.com/kontent-ai/dotnet/blob/main/src/aspnetcore/README.md
 - Model generator: https://github.com/kontent-ai/dotnet/blob/main/src/model-generator/README.md
 - `dotnet package search <id> --exact-match` for the latest stable version, and restore diagnostics for compatibility
@@ -54,7 +55,7 @@ dotnet add <models-project> package Kontent.Ai.Delivery.SourceGeneration
 dotnet add <web-project> package Kontent.Ai.AspNetCore
 ```
 
-Add `--prerelease` to each only while the line has no stable release yet; `dotnet package search Kontent.Ai.Delivery --exact-match` answers that in one call, and the report should say which you used. Under central package management put the resolved versions in `Directory.Packages.props` as `PackageVersion` entries instead.
+No `--prerelease`: the line has been stable since Delivery 20.0.0, AspNetCore 1.0.0 and ModelGenerator 11.0.0, and the flag would now resolve a preview of whatever comes next. Take the newest patch rather than the `.0`, because the early patches fix silent failures: Delivery 20.0.1 stops an unmapped typed listing from returning every content type, and ModelGenerator 11.0.1 stops a failed generation from exiting 0. Under central package management put the resolved versions in `Directory.Packages.props` as `PackageVersion` entries instead.
 
 Keep `Kontent.Ai.Delivery.SourceGeneration` at the same version as `Kontent.Ai.Delivery`; a plain `PackageReference` is enough, NuGet places it in the analyzers folder itself. `Kontent.Ai.Delivery.Caching`, `Kontent.Ai.Urls` or a direct `Kontent.Ai.Delivery.Abstractions` reference are added only when code needs them, not because a sample app lists them.
 
@@ -79,7 +80,7 @@ using Kontent.Ai.Delivery;
 builder.Services.AddDeliveryClient(delivery => delivery.Options.BindConfiguration("DeliveryOptions"));
 ```
 
-`delivery.Options` is an `OptionsBuilder<DeliveryOptions>`, so `Configure`, `Bind`, `BindConfiguration`, `PostConfigure` and `Validate` are all there, and `BindConfiguration` keeps `IOptionsMonitor` reloads working. The pipeline hangs off the same builder: `delivery.HttpClient` (an `IHttpClientBuilder`), `delivery.ConfigureResilience(...)`, and, when the user asks for caching, `delivery.UseMemoryCache(cache => ...)` from `Kontent.Ai.Delivery.Caching`. A named client is `AddDeliveryClient("preview", delivery => ...)`. The `using Kontent.Ai.Delivery;` line is required; implicit usings do not include it.
+`delivery.Options` is an `OptionsBuilder<DeliveryOptions>`, so `Configure`, `Bind`, `BindConfiguration`, `PostConfigure` and `Validate` are all there, and `BindConfiguration` keeps `IOptionsMonitor` reloads working. The pipeline hangs off the same builder: `delivery.HttpClient` (an `IHttpClientBuilder`), `delivery.TuneRetry(retry => retry.MaxRetryAttempts = 5)` to adjust the default retries while keeping the SDK's `Retry-After` handling, `delivery.ConfigureResilience(...)` to replace the pipeline outright, and, when the user asks for caching, `delivery.UseMemoryCache(cache => ...)` from `Kontent.Ai.Delivery.Caching`. A named client is `AddDeliveryClient("preview", delivery => ...)`. The `using Kontent.Ai.Delivery;` line is required; implicit usings do not include it.
 
 The environment ID may live in tracked configuration when the repository permits it. `PreviewApiKey` and `SecureAccessApiKey` go to user secrets in development and to environment variables such as `DeliveryOptions__SecureAccessApiKey` in deployment:
 
