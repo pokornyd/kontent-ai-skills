@@ -12,6 +12,7 @@ Standard library only.
 import json
 import os
 import sys
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -29,7 +30,16 @@ def main():
     embedded, links, items = {}, {}, 0
     continuation = None
     while True:
-        page, token = fetch_page(url, key, continuation)
+        try:
+            page, token = fetch_page(url, key, continuation)
+        except urllib.error.HTTPError as error:
+            hints = {
+                401: "the environment has Secure Access on, or the key was rejected: export KONTENT_SECURE_ACCESS_KEY",
+                404: "no environment with that ID: check the environment ID",
+            }
+            sys.exit(f"Delivery API answered {error.code}: {hints.get(error.code, error.reason)}")
+        except urllib.error.URLError as error:
+            sys.exit(f"Could not reach deliver.kontent.ai: {error.reason}")
         modular = page.get("modular_content", {})
         for item in page.get("items", []):
             items += 1
@@ -47,6 +57,9 @@ def main():
         continuation = token
 
     print(f"{items} '{content_type}' item(s) inspected")
+    if items == 0:
+        print("No items came back: check the content type codename (and the language codename, which is\n"
+              "whatever the project calls it; an unknown one returns nothing rather than an error).")
     report("Embedded components and linked items (WithContentResolver<T>)", embedded)
     report("Content item links (WithContentItemLinkResolver)", links)
 
