@@ -1,0 +1,24 @@
+{
+  "skill_name": "add-kontent-preview-smart-link",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our editors want to preview unpublished changes to articles in the KontentMvc app in kontent-mvc-app before they publish, and to click from the previewed page straight into the right place in the Kontent.ai editor (Smart Link, so it works in Kontent.ai's live preview). Visitors must keep seeing published content only. Add that. I've exported the Preview API key as KONTENT_PREVIEW_API_KEY in this shell. When you're done, tell me exactly what to configure in Kontent.ai.",
+      "expected_output": "Requires KONTENT_PREVIEW_API_KEY for environment 8a80c10d-3530-016a-4222-675cc7ba3019. Preview mode on a second, named Delivery client chosen per request, entered through a secret on the page's real URL that is stripped by a redirect, held in a protected SameSite=None; Secure; HttpOnly cookie, with frame-ancestors for app.kontent.ai and no-store on preview responses; visitors unchanged. Smart Link SDK pinned and loaded for preview requests only; environment id, language codename, item ids, element codenames and the rich-text component id rendered with the environment's real values. The key value appears in no file. The report gives the preview URL template per routable type, says live preview must be activated and the host must be HTTPS, and states that the URL secret is not access control. Grade by running the app and scripts/verify_preview.py against /articles/patient-care-innovation (item codename patient_care_innovation), never from the run's report.",
+      "files": [
+        "evals/files/kontent-mvc-app"
+      ],
+      "assertions": [
+        "scripts/verify_preview.py exits 0 against /articles/patient-care-innovation with the app started on the run's own configuration keys, verified by the grader running it",
+        "A cookieless request is served from deliver.kontent.ai and a request with the preview cookie from preview-deliver.kontent.ai, verified from the app's HTTP client log",
+        "The default Delivery client registration is unchanged and UsePreviewApi is never set on it; preview runs on a second, named client",
+        "The Preview API key value appears in no file under the output directory, in no command the run executed and not in its report, verified by searching for the value",
+        "The preview gate fails closed: with no gate secret configured, no request can switch preview on, verified by the grader starting the app without it",
+        "The Smart Link SDK script is pinned to a major or exact version and is absent from a visitor's page",
+        "The report gives a preview URL template for the article type that uses the app's real route and the {URLslug} macro, says the host must be HTTPS, and states that the URL secret is not access control",
+        "Pre-existing files that were modified keep one line ending throughout, the same as at the fixture commit, and their byte-order mark if they had one",
+        "The solution builds with zero errors and zero warnings, verified by the grader building it"
+      ]
+    }
+  ]
+}
