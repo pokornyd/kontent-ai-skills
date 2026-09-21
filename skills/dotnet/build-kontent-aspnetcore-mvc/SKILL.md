@@ -5,12 +5,20 @@ license: MIT
 compatibility: Requires the .NET 10 SDK, NuGet access and Delivery API read access to the target Kontent.ai environment. Designed for coding agents with shell access (Claude Code or similar).
 metadata:
   author: kontent-ai
-  version: "0.3.0"
+  version: "0.4.0"
 ---
 
 # Build a Kontent.ai ASP.NET Core MVC application
 
 Produce a compiling MVC application that reads Kontent.ai content through the Delivery SDK, either from the standard `dotnet new mvc` template or by integrating into an existing MVC project. The framework template and the Kontent.ai tooling are the substrate: no starter application is copied, and nothing is hand-written that the tooling can generate.
+
+## Scope
+
+This skill produces a starter: an MVC app with the Kontent.ai packages, configuration, generated models, type resolution and Razor helpers wired correctly, optionally with one content slice that shows the conventions in use. It is meant to be built upon, by the user or by other skills; it is not a site builder. When a request reaches past that, do the starter's part and hand over the rest:
+
+- **A whole site** ("build the site this environment describes"): deliver the starter, then report what the inspection found that whoever builds the site will need: which element carries the navigation, which types have a URL slug, what the rich text embeds. Site structure, URL design and page composition are product decisions for the user or another skill; do not build cross-type navigation or routes on this skill's authority.
+- **A different architecture** (Web API with a SPA or BFF, Blazor) or **Management API writes**: the facts in [Gotchas](#gotchas) and the package, registration and model-generation steps still hold, because they describe the SDK. Everything about Razor rendering and the presentation boundary does not. Say so up front, apply only the parts that hold, and do not present the rest of what you build as following this skill.
+- **A feature on top of the starter** (a multilingual site, preview, caching, webhooks, Smart Link): the starter comes first; the feature is built from the SDK documentation and your own judgement, and the report says which parts the skill covered.
 
 ## Workflow
 
@@ -21,7 +29,7 @@ Work through the steps in order; each later step assumes the earlier one compile
 - [ ] 3. Scaffold or integrate - read `references/scaffold-and-packages.md`
 - [ ] 4. Generate models - read `references/model-generation.md`
 - [ ] 5. Wire Razor rendering and leave the conventions in the repo - read `references/razor-rendering.md`
-- [ ] 6. Build a content slice only when asked - read `references/content-presentation.md`, `references/localization.md` when the environment has more than one language, and run `scripts/rich_text_inventory.py` for every type whose rich text the slice renders
+- [ ] 6. Build one content slice, only when asked - read `references/content-presentation.md`, `references/localization.md` when the environment has more than one language, and run `scripts/rich_text_inventory.py` for every type whose rich text the slice renders
 - [ ] 7. Validate and report - read `references/validation.md`
 
 Read the [Gotchas](#gotchas) before step 3. They are the facts most likely to be wrong in memory.
@@ -93,9 +101,9 @@ Then make the architecture survive the session. A plumbing-only scaffold contain
 Generated records are Delivery element models, not view models.
 
 - Scaffolding and models only: stop at a clean, compiling integration with the conventions file in place. Empty repository, service or mapper folders and interfaces without an implementation add nothing; the conventions file carries the intent without dead code.
-- A working page, or a named content type: read `references/content-presentation.md` and implement one vertical slice. More than one language in the environment means an explicit language on every query; routes per language, translated interface strings and a language switcher are built only when the user asks for a multilingual site (`references/localization.md`).
+- A working page, or a named content type: read `references/content-presentation.md` and implement one vertical slice, meaning one content type, its listing and/or detail page, and the linked types that page renders. No navigation, no home page composition, no pages for other types. More than one language in the environment means an explicit language on every query (`references/localization.md`).
 - Several content types could plausibly drive the first page and the choice affects routes: recommend one, or ask, before building.
-- Whole-site requests ("build the site this environment describes"): explain that navigation, URL hierarchy and page composition cannot be derived from content-type names alone, then offer a bounded first slice.
+- Whole-site requests: see [Scope](#scope). Deliver the starter, hand over what the inspection found, and recommend the first slice you would build.
 
 ## 7. Validate and report
 
@@ -117,7 +125,7 @@ Report the environment from what it actually returned, not from what its ID rese
 
 ## Gotchas
 
-- **Registration takes one builder callback:** `builder.Services.AddDeliveryClient(delivery => delivery.Options.BindConfiguration("DeliveryOptions"))`. The `IConfiguration`, `Action<DeliveryOptions>` and `DeliveryClientBuilder` overloads that older samples and most training data still show were removed in this major; caching attaches to the same builder (`delivery.UseMemoryCache()` from `Kontent.Ai.Delivery.Caching`), and so does retry tuning (`delivery.TuneRetry(...)`). The extension lives in the `Kontent.Ai.Delivery` namespace, which implicit usings do not cover, so Program.cs needs `using Kontent.Ai.Delivery;` or the build fails on the first try.
+- **Registration takes one builder callback:** `builder.Services.AddDeliveryClient(delivery => delivery.Options.BindConfiguration("DeliveryOptions"))`. The `IConfiguration`, `Action<DeliveryOptions>` and `DeliveryClientBuilder` overloads that older samples and most training data still show were removed in this major; caching attaches to the same builder (`delivery.UseMemoryCache()` from `Kontent.Ai.Delivery.Caching`). The extension lives in the `Kontent.Ai.Delivery` namespace, which implicit usings do not cover, so Program.cs needs `using Kontent.Ai.Delivery;` or the build fails on the first try.
 - **The packages are `net10.0` only.** There is no multi-targeting, so an older project fails restore with `NU1202`. Never retarget an app to make restore pass, and never drop to the 19.x line to get a green build: that line predates the builder registration, `OrderByElement` and `DeliveryRequestException`, so the code in these references would not compile. An app below `net10.0` needs the framework upgrade first, which is the user's decision to make.
 - **`Kontent.Ai.Delivery.SourceGeneration` is a Roslyn generator.** Reference it in the project that compiles the attributed models and keep its version equal to `Kontent.Ai.Delivery`. Auto-discovery of the generated `GeneratedTypeProvider` searches the entry assembly and its references and expects the attributed models in one compilation; models split across projects need an explicit `ITypeProvider` registration. So does a test host, whose entry assembly is the test runner: from 20.0.1 a typed listing with no mapped model throws `InvalidOperationException` instead of querying every type, so an existing test project that builds its own container needs `services.AddSingleton<ITypeProvider, GeneratedTypeProvider>()`.
 - **The model generator reads only its command line and an `appSettings.json` in its working directory.** It does not read user secrets, environment variables or the app's `appsettings.json`. Its command name is `KontentModelGenerator`; as a local tool run it with `dotnet tool run KontentModelGenerator`. For a protected environment pass `--DeliveryOptions:UseSecureAccess true --DeliveryOptions:SecureAccessApiKey "$KONTENT_SECURE_ACCESS_KEY"`; a temporary config file outside the repository does not work because the local tool manifest is only found by walking up from the working directory. The tool itself needs the .NET 10 runtime.
@@ -127,7 +135,7 @@ Report the environment from what it actually returned, not from what its ID rese
 - **Generated files are `partial record`s and are overwritten on regeneration.** Extend a model in a separate partial file in the same namespace outside the generated directory; never edit generated files.
 - **A query without a language silently serves the environment's default.** There is no global setting to change that, so in a multilingual environment a forgotten parameter looks exactly like success. Read `references/localization.md` before writing the first query.
 - **Typed queries filter by type for you.** `GetItems<Article>()` adds `system.type=article` from `[ContentTypeCodename]`. Use the generated `<Element>Codename` constants (`Article.TitleCodename`) in `WithElements`, `Where` and `OrderByElement(Article.PublishDateCodename, OrderingMode.Descending)` instead of retyped strings; `OrderByElement` and `OrderBySystem` add the `elements.`/`system.` prefix, `OrderBy` still wants the full path.
-- **Failures are results; cancellation throws.** `ExecuteAsync(cancellationToken)` returns `IDeliveryResult<T>`: a missing item is `IsSuccess == false` with `StatusCode == NotFound`; a transport failure has `StatusCode == 0` and `Error.Exception`. Only `OperationCanceledException` is thrown from a single request, so a `catch (HttpRequestException)` around `ExecuteAsync` is dead code. The one place that throws is a walk: `EnumerateAsync()` on the feed and used-in queries raises `DeliveryRequestException` on a failed page instead of ending early, so an export cannot mistake a partial result for a complete one. One shape changed at GA: the typeless `GetItem(codename)` returns a `DeliveryItemResponse`, so the item is `result.Value.Item`; the typed `GetItem<T>(codename)` this skill uses still returns the item as `result.Value`.
+- **Failures are results; cancellation throws.** `ExecuteAsync(cancellationToken)` returns `IDeliveryResult<T>`: a missing item is `IsSuccess == false` with `StatusCode == NotFound`; a transport failure has `StatusCode == 0` and `Error.Exception`. Only `OperationCanceledException` is thrown from a single request, so a `catch (HttpRequestException)` around `ExecuteAsync` is dead code. The one place that throws is a walk: `EnumerateAsync()` on the feed and used-in queries raises `DeliveryRequestException` on a failed page instead of ending early, so an export cannot mistake a partial result for a complete one.
 - **Stale models announce themselves in the log, not in the build.** A content type the API returns but no generated model covers falls back to `IDynamicElements` and logs warning `1408` (`Content type '<codename>' has no mapped model`, category `Kontent.Ai.Delivery.ContentItems.ItemTypingStrategy`) once per type. Linked items of that type then miss every `OfType<IContentItem<T>>()` and silently vanish from the page. Seeing it means regenerate.
 - **`<rich-text>` renders the resolver output in place**, with no wrapper element. Text and inline images need nothing. An embedded component or a content-item link with no resolver renders as `<!-- [Kontent.ai SDK] Missing resolver … -->`: the SDK reporting the gap rather than hiding it, and the editor's component missing from the page.
 - **Generated models do not show what rich text embeds.** The property is `RichTextContent?` whether editors embedded nothing or five component types, and a component used in one item is invisible in any other item's page. Before wiring a slice, run `scripts/rich_text_inventory.py <environment-id> <type>` for each type whose rich text the slice renders, register a resolver per reported type, and smoke-test the items it names.

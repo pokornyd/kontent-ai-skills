@@ -2,6 +2,8 @@
 
 Read only when implementing a working MVC content slice. A plumbing-only scaffold gets none of these layers; the conventions file already tells the next session what they will look like.
 
+A slice is one content type: its listing and/or detail page and the linked types that page renders. Its purpose is to show the conventions working end to end so the next slice can copy them. Navigation, home page composition, pages for other types and site-wide URL design are outside this skill.
+
 The shape below is the one the official [Kontent.ai MVC sample app](https://github.com/kontent-ai/sample-app-net-mvc) uses. Follow it unless the target project already has an equivalent convention, in which case match the project.
 
 ## Layout
@@ -150,4 +152,4 @@ Validate route input, call the service, map, return `NotFound()` for `null`. Del
 
 ## Selecting a first content type
 
-Use the type the user named. Otherwise inspect the generated models and representative content, recommend a type with obvious display fields, and ask before assuming routes or information architecture when more than one candidate is plausible. A listing plus detail pair is a good first slice only when the model exposes suitable title, slug, summary, rich-text and asset elements; use the generated codename constants rather than invented field names. Global navigation, URL hierarchy and page composition are not derivable from content-type names.
+Use the type the user named. Otherwise inspect the generated models and representative content, recommend a type with obvious display fields, and ask before assuming routes or information architecture when more than one candidate is plausible. A listing plus detail pair is a good first slice only when the model exposes suitable title, slug, summary, rich-text and asset elements; use the generated codename constants rather than invented field names. Global navigation, URL hierarchy and page composition are outside this skill; when the inspection shows where they would come from, such as a `subpages` element, say so in the report rather than building them.
