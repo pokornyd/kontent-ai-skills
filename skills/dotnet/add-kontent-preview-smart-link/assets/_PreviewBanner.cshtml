@@ -1,0 +1,12 @@
+@*
+    Tells an editor they are looking at unpublished content, and lets them leave. Include right after <body>:
+    <partial name="_PreviewBanner" />   Change the namespace to the one KontentPreview.cs was given.
+*@
+@inject YourApp.Preview.IPreviewContext Preview
+@if (Preview.IsPreview)
+{
+    <aside role="status" style="position:sticky;top:0;z-index:2000;padding:.4rem 1rem;background:#0a6b3b;color:#fff;font:14px/1.4 system-ui,sans-serif">
+        Preview: showing the latest unpublished content.
+        <a href="/preview/exit?returnUrl=@Uri.EscapeDataString(Context.Request.Path)" style="color:#fff;margin-left:1rem">Leave preview</a>
+    </aside>
+}

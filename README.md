@@ -10,6 +10,7 @@ Skills are grouped by the ecosystem they target:
 skills/
   dotnet/                   Skills for the Kontent.ai .NET tools (Delivery, Management, Sync, ASP.NET Core, model generator)
     build-kontent-aspnetcore-mvc/
+    add-kontent-preview-smart-link/
   typescript/               Skills for the Kontent.ai JavaScript and TypeScript tools (planned)
 ```
 
@@ -18,6 +19,7 @@ The `skills/<scope>/<skill>/` shape is one of the layouts `gh skill` discovers, 
 | Skill | What it does |
 |---|---|
 | [`build-kontent-aspnetcore-mvc`](skills/dotnet/build-kontent-aspnetcore-mvc/SKILL.md) | Scaffold a new ASP.NET Core MVC app on Kontent.ai, or add Kontent.ai Delivery to an existing one: packages, configuration, generated models, source-generated type resolution and Razor rendering. |
+| [`add-kontent-preview-smart-link`](skills/dotnet/add-kontent-preview-smart-link/SKILL.md) | Add preview mode and Smart Link click-to-edit to a server-rendered ASP.NET Core app on Kontent.ai: a named preview client, an iframe-safe secret-gated cookie, the SDK for editors only, `data-kontent-*` markup, and the preview URLs to configure. |
 
 ## Using a skill
 
