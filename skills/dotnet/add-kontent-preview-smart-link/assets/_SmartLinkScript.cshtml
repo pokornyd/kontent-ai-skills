@@ -1,0 +1,14 @@
+@*
+    Kontent.ai Smart Link SDK. Include once in the layout's <head>: <partial name="_SmartLinkScript" />
+    Loaded for preview requests only, so visitors never download it. It reads the data-kontent-* attributes
+    in the page; data-kontent-environment-id and data-kontent-language-codename come from <body>.
+    The major version is pinned: v4 used data-kontent-project-id, v5 uses data-kontent-environment-id.
+    Inside Kontent.ai's live preview it activates by itself; in a plain tab append ?ksl-enabled to the URL.
+    Change the namespace below to the one KontentPreview.cs was given.
+*@
+@inject YourApp.Preview.IPreviewContext Preview
+@if (Preview.IsPreview)
+{
+    <script src="https://cdn.jsdelivr.net/npm/@@kontent-ai/smart-link@@5/dist/bundles/kontent-smart-link.min.js"></script>
+    <script>kontentSmartLink.KontentSmartLink.initializeOnLoad();</script>
+}
