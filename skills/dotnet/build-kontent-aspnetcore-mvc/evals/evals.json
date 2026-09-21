@@ -4,12 +4,12 @@
     {
       "id": 1,
       "prompt": "Create a new ASP.NET Core MVC app called Acme.Web and wire it to Kontent.ai environment 8a80c10d-3530-016a-4222-675cc7ba3019. Generate strongly typed models for it, but don't invent any pages from the content model yet - I just want the plumbing in place.",
-      "expected_output": "A solution with an MVC project from the standard template on an installed stable SDK; Kontent.Ai.Delivery, Kontent.Ai.Delivery.SourceGeneration and Kontent.Ai.AspNetCore from the current package line (release candidates installed with --prerelease); a local tool manifest at .config/dotnet-tools.json pinning Kontent.Ai.ModelGenerator; generated models in a dedicated directory; DeliveryOptions bound in Program.cs through the builder callback (delivery.Options.BindConfiguration); tag helpers registered, AddKontentRichText called and ImageTransformationOptions bound with a ResponsiveWidths ladder in appsettings.json; an AGENTS.md carrying the Kontent.ai conventions section with the real generated directory and regeneration command; a .gitignore; a green build; and no controllers, views or routes derived from content types.",
+      "expected_output": "A solution with an MVC project from the standard template on an installed stable SDK; Kontent.Ai.Delivery, Kontent.Ai.Delivery.SourceGeneration and Kontent.Ai.AspNetCore from the current stable package line (Delivery 20.x, AspNetCore 1.x, no --prerelease); a local tool manifest at .config/dotnet-tools.json pinning Kontent.Ai.ModelGenerator; generated models in a dedicated directory; DeliveryOptions bound in Program.cs through the builder callback (delivery.Options.BindConfiguration); tag helpers registered, AddKontentRichText called and ImageTransformationOptions bound with a ResponsiveWidths ladder in appsettings.json; an AGENTS.md carrying the Kontent.ai conventions section with the real generated directory and regeneration command; a .gitignore; a green build; and no controllers, views or routes derived from content types.",
       "files": [],
       "assertions": [
         "A .config/dotnet-tools.json manifest pins Kontent.Ai.ModelGenerator",
         "All ten content types of the environment were generated (Article, BlogPost, CallToAction, Disclaimer, Event, LandingPage, Page, Person, Service, Video), each carrying the auto-generated header and a [ContentTypeCodename] attribute",
-        "The web project references Kontent.Ai.Delivery, Kontent.Ai.Delivery.SourceGeneration and Kontent.Ai.AspNetCore from one package line (the current release-candidate line unless the user or framework forces the previous stable one)",
+        "The web project references Kontent.Ai.Delivery, Kontent.Ai.Delivery.SourceGeneration and Kontent.Ai.AspNetCore from one package line, Delivery 20.x with AspNetCore 1.x, and every resolved Kontent.ai package version and the ModelGenerator version in the tool manifest is a stable release with no prerelease suffix such as -rc",
         "Program.cs registers the client with the builder callback form, AddDeliveryClient(delivery => delivery.Options.BindConfiguration(\"DeliveryOptions\")) or equivalent, not an IConfiguration or Action<DeliveryOptions> overload",
         "_ViewImports.cshtml contains @addTagHelper *, Kontent.Ai.AspNetCore",
         "Program.cs calls AddKontentRichText and binds ImageTransformationOptions, and appsettings.json has an ImageTransformationOptions section with ResponsiveWidths",
@@ -33,10 +33,14 @@
         "Generated models exist in a dedicated directory inside the web project and compile",
         "Program.cs registers the client with the builder callback form, AddDeliveryClient(delivery => delivery.Options.BindConfiguration(\"DeliveryOptions\")) or equivalent, not an IConfiguration or Action<DeliveryOptions> overload",
         "The solution builds with zero errors and zero warnings, verified by the grader building it rather than by the run's own report",
-        "No controller, route, view model or content view was added, and the only pre-existing file edited besides the project and configuration files is _ViewImports.cshtml",
-        "No AGENTS.md or CLAUDE.md was created or edited in the existing solution; the report proposes the conventions section instead",
-        "Every Kontent.ai package resolves from one major line, and that line targets the project's framework",
-        "Files edited in the existing solution keep their original line endings and byte-order mark"
+        "No controller, route, view model or content view was added, and the only pre-existing files with changes are Directory.Packages.props, Acme.Web/Acme.Web.csproj, Acme.Web/Program.cs, Acme.Web/appsettings.json (or appsettings.Development.json) and Acme.Web/Views/_ViewImports.cshtml, verified with git status against the fixture commit",
+        "No AGENTS.md or CLAUDE.md was created or edited in the existing solution",
+        "The report proposes a Kontent.ai conventions section for the team's instructions file, stating that generated records are mapped to view models rather than bound into views",
+        "Kontent.Ai.Delivery and Kontent.Ai.Delivery.SourceGeneration resolve to the same 20.x version and Kontent.Ai.AspNetCore to 1.x; Delivery and AspNetCore resolve from a lib/net10.0 asset (SourceGeneration is analyzer-only and has no lib folder); every PackageVersion added is a stable release with no prerelease suffix",
+        ".config/dotnet-tools.json pins a stable Kontent.Ai.ModelGenerator 11.x, and the compiled web assembly contains the source-generated GeneratedTypeProvider, so the generator package was referenced by the project that compiles the models",
+        "Every pre-existing file with changes has one line ending throughout, the same as at the fixture commit, and keeps its byte-order mark if it had one: per file, the count of CR-terminated lines equals the line count for a file that was CRLF, or zero for one that was LF, and a leading EF BB BF is preserved",
+        "The tracked DeliveryOptions section contains EnvironmentId 8a80c10d-3530-016a-4222-675cc7ba3019, so the bound configuration reaches the environment the user named",
+        "No Preview or Secure Access key value appears in any tracked or untracked file of the solution"
       ]
     },
     {
@@ -54,7 +58,7 @@
         "The article image asset is rendered with an img-asset tag helper",
         "No navigation menu, homepage composition or routes for content types other than Article were invented",
         "The solution builds with zero errors and zero warnings, verified by the grader building it rather than by the run's own report",
-        "The rendered article detail page contains no missing-resolver HTML comment, so any component embedded in the body has a registered resolver"
+        "No article detail page contains a missing-resolver HTML comment, verified by the grader requesting the detail page of every article the listing links to, so every component embedded in a body and every content-item link has a registered resolver"
       ]
     },
     {
@@ -92,10 +96,12 @@
       ],
       "assertions": [
         "Legacy.Web.csproj still targets net8.0 and no target framework was changed anywhere",
-        "No Kontent.Ai.* PackageReference was added to any project file, and no .config/dotnet-tools.json was created",
+        "No Kontent.Ai.* PackageReference was added to any project file, no .config/dotnet-tools.json was created, and no source, view or configuration file implementing a Kontent.ai integration was added",
         "The report states that the current Kontent.ai packages require net10.0, citing the restore incompatibility rather than asserting it",
         "The report puts the framework upgrade to the user as a decision instead of making it, and does not present Delivery 19.x as a supported fallback for this integration",
-        "The existing app is left in its original working state: the fixture still builds with zero errors and zero warnings, verified by the grader building it"
+        "The working tree of existing-net8 is identical to the fixture commit: git status --porcelain is empty apart from ignored build output",
+        "The fixture still builds with zero errors and zero warnings, verified by the grader building it",
+        "The report states that .NET 8 reaches end of support in November 2026"
       ]
     },
     {
@@ -120,11 +126,35 @@
         "The environment ID came from the app's own DeliveryOptions configuration, not from a guess or an unrelated sample environment",
         "Brewer.cs and Cafe.cs are gone: both are content types the environment does not have and nothing in the app references them",
         "Coffee.cs is still present, because Acme.Web/Services/ProductFeed.cs depends on it, and the app still builds with zero errors, verified by the grader building it",
-        "Acme.Web/Services/ProductFeed.cs is unchanged: the agent did not delete or rewrite the user's code to resolve the situation on its own",
+        "Acme.Web/Services/ProductFeed.cs and its registration in Acme.Web/Program.cs are unchanged: the agent did not delete or rewrite the user's code to resolve the situation on its own",
         "The report states that the coffee content type no longer exists in the environment and names ProductFeed.cs as the file that depends on it, leaving the decision to the user",
         "Article.cs regained the topics element that the checked-in copy was missing, both the TopicsCodename constant and the Topics property, which only a real regeneration produces",
         "The regeneration used the tool version pinned in .config/dotnet-tools.json rather than a global install or a different version",
-        "The report separates what was removed, what was added and what was deliberately left in place, rather than describing the change in general terms"
+        "The report lists each file it removed and each model change it made by name, rather than describing the change in general terms",
+        "The nine content types that did not change regenerated byte-identical to the fixture commit, so the generator was invoked with the options the existing models were produced with"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Set up a new ASP.NET Core MVC site called Northwind.Health on our Kontent.ai environment 8a80c10d-3530-016a-4222-675cc7ba3019. I want a services listing page and a detail page per service that shows the description, the image and the team members working on it. We'll launch in English and Spanish.",
+      "expected_output": "A bilingual vertical slice for the service content type on the stable package line. The environment has two languages, default (English) and es-ES, and no item has an es-ES variant, so every Spanish page is language fallback. Every Delivery query names its language explicitly; culture-prefixed routes serve both languages; Spanish pages render translated interface text and admit that the content fell back; the detail page renders the description with the rich-text tag helper, the image with img-asset and the linked team through a Person mapper and view model, with no route for Person; the language switcher on a detail page finds the counterpart by content item rather than rewriting the path; unknown slugs and unsupported cultures return 404; green build.",
+      "files": [],
+      "assertions": [
+        "Every Delivery items query in the application names its language explicitly with WithLanguage, taking the language as a parameter rather than reading ambient culture inside the query code, and no items query relies on the environment default",
+        "English is mapped to the Kontent.ai language codename 'default', which is what this environment calls it, and the English services listing served by the running app shows the environment's four services",
+        "The running app serves the services listing in both languages at distinct URLs and both return 200 with four services, verified by the grader requesting them",
+        "A Spanish page says that its content has not been translated, and that state is derived by comparing the returned item's system language with the requested language rather than hardcoded or inferred from the culture alone",
+        "Static interface text on the Spanish listing page (heading, navigation or labels) is rendered in Spanish, and no page renders a raw resource key in place of a string",
+        "The service detail page renders the description through the rich-text tag helper and shows the names of the linked team members",
+        "The service hero image on the detail page and the service images on the listing are rendered through the img-asset tag helper with a non-empty alt attribute in the rendered HTML, although every asset description in this environment is empty",
+        "Team members are mapped from the linked Person items through their own mapper and view model, and no controller, route or view was created for Person as a page",
+        "A content service or equivalent class owns the Delivery queries, and no controller references IDeliveryClient",
+        "No IDeliveryResult, IDeliveryItemListingResponse or Pagination type appears in a controller, view model or view",
+        "The language switcher on a detail page resolves its target by looking the same content item up in the target language, by codename or id, instead of replacing the culture segment of the current path",
+        "A slug that matches no service returns 404 and an unsupported culture segment returns 404 rather than 500 or a default-language page, verified by the grader requesting them",
+        "No rendered page contains an empty href attribute, verified across the listing and one detail page in both languages",
+        "Every Kontent.ai package and the ModelGenerator tool resolved to a stable version with no prerelease suffix, and Program.cs registers the client with the builder callback form of AddDeliveryClient",
+        "The solution builds with zero errors and zero warnings, verified by the grader building it rather than by the run's own report"
       ]
     }
   ]
